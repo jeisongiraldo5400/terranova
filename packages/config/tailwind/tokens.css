@@ -1,0 +1,105 @@
+/* ==========================================================================
+   TERRANOVA - Tokens de diseno
+   --------------------------------------------------------------------------
+   La paleta se extrajo del sistema v0 (frontend/src). Todos los valores
+   coinciden exactamente con los que ya usaba la aplicacion, de modo que la
+   identidad visual no cambia:
+
+     #1e3a8a  sidebar                  -> brand-900
+     #2563eb  boton de accion primaria -> brand-600
+     #dbeafe  banner proyecto activo   -> brand-100
+     #eff6ff  fondo de tarjeta info    -> brand-50
+     #0f172a  fondo del login          -> ink-900
+     #f1f5f9  fondo de la aplicacion   -> surface
+     #16a34a / #22c55e / #dcfce7 / #166534   verdes de "pagado"/"disponible"
+     #dc2626 / #ef4444                       rojos de "vendido"/"eliminar"
+     #f59e0b / #d97706 / #fef3c7             ambares de "reservado"/"pendiente"
+
+   Se descarto el acento morado (#aa3bff) del index.css anterior: era residuo
+   de una plantilla, no parte de la identidad del sistema.
+   ========================================================================== */
+
+@theme {
+  /* --- Marca ------------------------------------------------------------ */
+  --color-brand-50: #eff6ff;
+  --color-brand-100: #dbeafe;
+  --color-brand-500: #3b82f6;
+  --color-brand-600: #2563eb;
+  --color-brand-700: #1d4ed8;
+  --color-brand-900: #1e3a8a;
+
+  /* --- Superficies ----------------------------------------------------- */
+  --color-surface: #f1f5f9;
+  --color-surface-raised: #ffffff;
+  --color-ink-900: #0f172a;
+  --color-ink-700: #334155;
+
+  /* --- Semanticos: estados de lote, venta y cartera -------------------- */
+  --color-success-100: #dcfce7;
+  --color-success-500: #22c55e;
+  --color-success-600: #16a34a;
+  --color-success-800: #166534;
+
+  --color-warning-100: #fef3c7;
+  --color-warning-500: #f59e0b;
+  --color-warning-600: #d97706;
+  --color-warning-800: #92400e;
+
+  --color-danger-100: #fee2e2;
+  --color-danger-500: #ef4444;
+  --color-danger-600: #dc2626;
+  --color-danger-800: #991b1b;
+
+  /* --- Neutros --------------------------------------------------------- */
+  --color-muted-100: #f3f4f6;
+  --color-muted-200: #e5e7eb;
+  --color-muted-300: #d1d5db;
+  --color-muted-400: #9ca3af;
+  --color-muted-500: #6b7280;
+  --color-muted-600: #64748b;
+  --color-muted-700: #475569;
+
+  /* --- Tipografia ------------------------------------------------------ */
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* Tabular para columnas de dinero: los digitos quedan alineados */
+  --font-numeric: ui-sans-serif, system-ui, sans-serif;
+
+  /* --- Elevacion ------------------------------------------------------- */
+  --shadow-card: 0 1px 2px rgb(15 23 42 / 0.06), 0 1px 3px rgb(15 23 42 / 0.1);
+  --shadow-raised: 0 4px 6px -1px rgb(15 23 42 / 0.1), 0 2px 4px -2px rgb(15 23 42 / 0.06);
+  --shadow-overlay: 0 20px 25px -5px rgb(15 23 42 / 0.15), 0 8px 10px -6px rgb(15 23 42 / 0.1);
+
+  /* --- Radios ---------------------------------------------------------- */
+  --radius-card: 0.625rem;
+  --radius-control: 0.5rem;
+}
+
+/* --------------------------------------------------------------------------
+   Base
+   -------------------------------------------------------------------------- */
+@layer base {
+  * {
+    border-color: var(--color-muted-200);
+  }
+
+  body {
+    background-color: var(--color-surface);
+    color: var(--color-ink-700);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Cifras de dinero siempre alineadas en columna */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Foco visible y consistente en todo el sistema (accesibilidad AA) */
+  :focus-visible {
+    outline: 2px solid var(--color-brand-600);
+    outline-offset: 2px;
+  }
+}

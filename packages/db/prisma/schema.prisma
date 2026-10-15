@@ -1,0 +1,426 @@
+// ===========================================================================
+// TERRANOVA - Esquema de base de datos
+// ---------------------------------------------------------------------------
+// Reemplaza las 5 claves de localStorage del sistema v0, que estaban
+// desalineadas entre si ("clientes_por_proyecto" vs "clientesPorProyecto",
+// "lotes" vs "lotesPorProyecto") y guardaban datos derivados como el saldo.
+//
+// Principios:
+//   1. Todo el dinero es NUMERIC(14,2). Nunca un float.
+//   2. El saldo NO se almacena: se calcula (ver prisma/sql/vistas.sql).
+//   3. Los pagos no se borran: se anulan dejando rastro.
+//   4. Las invariantes critical viven en la base, no solo en el codigo.
+// ===========================================================================
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enumeraciones  (espejo de packages/shared/src/enums)
+// ---------------------------------------------------------------------------
+
+enum Rol {
+  ADMIN
+  SECRETARIA
+  EMPLEADO
+}
+
+enum EstadoProyecto {
+  ACTIVO
+  PAUSADO
+  CERRADO
+}
+
+enum EstadoLote {
+  DISPONIBLE
+  RESERVADO
+  VENDIDO
+  PAGADO
+  BLOQUEADO
+}
+
+enum EstadoVenta {
+  ACTIVA
+  LIQUIDADA
+  ANULADA
+}
+
+enum TipoPago {
+  CUOTA_INICIAL
+  ABONO
+  PAGO_FINAL
+}
+
+enum MetodoPago {
+  EFECTIVO
+  TRANSFERENCIA
+  CHEQUE
+  CONSIGNACION
+}
+
+enum TipoDocumento {
+  CC
+  CE
+  NIT
+  PASAPORTE
+}
+
+enum ModalidadPlan {
+  DOS_PAGOS
+  CUOTAS
+}
+
+// ---------------------------------------------------------------------------
+// Usuarios y sesiones
+// ---------------------------------------------------------------------------
+
+model Usuario {
+  id           String   @id @default(uuid()) @db.Uuid
+  email        String   @unique
+  nombre       String   @db.VarChar(120)
+  // Hash argon2id. El v0 comparaba `admin`/`1234` en texto plano.
+  passwordHash String   @map("password_hash")
+  rol          Rol
+  activo       Boolean  @default(true)
+  ultimoAcceso DateTime? @map("ultimo_acceso")
+  creadoEn     DateTime @default(now()) @map("creado_en")
+  actualizadoEn DateTime @updatedAt @map("actualizado_en")
+
+  sesiones          RefreshToken[]
+  ventasRegistradas Venta[]        @relation("ventaRegistradaPor")
+  ventasAnuladas    Venta[]        @relation("ventaAnuladaPor")
+  pagosRegistrados  Pago[]         @relation("pagoRegistradoPor")
+  pagosAnulados     Pago[]         @relation("pagoAnuladoPor")
+  contratos         Contrato[]
+  auditoria         AuditLog[]
+
+  @@index([rol, activo])
+  @@map("usuarios")
+}
+
+model RefreshToken {
+  id         String   @id @default(uuid()) @db.Uuid
+  usuarioId  String   @map("usuario_id") @db.Uuid
+  tokenHash  String   @unique @map("token_hash")
+  expiraEn   DateTime @map("expira_en")
+  revocadoEn DateTime? @map("revocado_en")
+  userAgent  String?  @map("user_agent") @db.VarChar(300)
+  ip         String?  @db.VarChar(45)
+  creadoEn   DateTime @default(now()) @map("creado_en")
+
+  usuario Usuario @relation(fields: [usuarioId], references: [id], onDelete: Cascade)
+
+  @@index([usuarioId, revocadoEn])
+  @@index([expiraEn])
+  @@map("refresh_tokens")
+}
+
+// ---------------------------------------------------------------------------
+// Proyectos y etapas
+// ---------------------------------------------------------------------------
+
+model Proyecto {
+  id            String         @id @default(uuid()) @db.Uuid
+  codigo        String         @unique @db.VarChar(30)
+  nombre        String         @db.VarChar(120)
+  ubicacion     String?        @db.VarChar(200)
+  estado        EstadoProyecto @default(ACTIVO)
+  // Regla del documento original: el lote minimo es de 1000 m2.
+  // Configurable por proyecto, con 1000 como valor por defecto.
+  areaMinimaM2  Decimal        @default(1000) @map("area_minima_m2") @db.Decimal(10, 2)
+  observaciones String?        @db.Text
+  creadoEn      DateTime       @default(now()) @map("creado_en")
+  actualizadoEn DateTime       @updatedAt @map("actualizado_en")
+
+  etapas Etapa[]
+  lotes  Lote[]
+
+  @@index([estado])
+  @@map("proyectos")
+}
+
+model Etapa {
+  id         String   @id @default(uuid()) @db.Uuid
+  proyectoId String   @map("proyecto_id") @db.Uuid
+  numero     Int
+  nombre     String   @db.VarChar(80)
+  creadoEn   DateTime @default(now()) @map("creado_en")
+
+  proyecto Proyecto @relation(fields: [proyectoId], references: [id], onDelete: Cascade)
+  lotes    Lote[]
+
+  @@unique([proyectoId, numero])
+  @@map("etapas")
+}
+
+// ---------------------------------------------------------------------------
+// Lotes
+// ---------------------------------------------------------------------------
+
+model Lote {
+  id         String     @id @default(uuid()) @db.Uuid
+  proyectoId String     @map("proyecto_id") @db.Uuid
+  etapaId    String?    @map("etapa_id") @db.Uuid
+  codigo     String     @db.VarChar(30)
+  // Campo inexistente en el v0, lo que hacia imposible aplicar la regla
+  // de los 1000 m2. Hay un CHECK en la base que lo respalda.
+  areaM2     Decimal    @map("area_m2") @db.Decimal(10, 2)
+  precioLista Decimal   @map("precio_lista") @db.Decimal(14, 2)
+  // Derivado del estado de la venta, no un dato independiente.
+  estado     EstadoLote @default(DISPONIBLE)
+  observaciones String? @db.Text
+  creadoEn   DateTime   @default(now()) @map("creado_en")
+  actualizadoEn DateTime @updatedAt @map("actualizado_en")
+
+  proyecto Proyecto @relation(fields: [proyectoId], references: [id], onDelete: Restrict)
+  etapa    Etapa?   @relation(fields: [etapaId], references: [id], onDelete: SetNull)
+  ventas   Venta[]
+
+  // El v0 no validaba unicidad: se podian crear dos lotes "MZ-A01".
+  @@unique([proyectoId, codigo])
+  @@index([proyectoId, estado])
+  @@index([estado])
+  @@map("lotes")
+}
+
+// ---------------------------------------------------------------------------
+// Clientes
+// ---------------------------------------------------------------------------
+
+model Cliente {
+  id            String        @id @default(uuid()) @db.Uuid
+  tipoDocumento TipoDocumento @default(CC) @map("tipo_documento")
+  // Unico a nivel global. En el v0 el cliente estaba anidado por proyecto,
+  // de modo que quien compraba en dos proyectos quedaba duplicado con dos
+  // historiales de saldo distintos.
+  documento     String        @unique @db.VarChar(20)
+  nombre        String        @db.VarChar(120)
+  telefono      String        @db.VarChar(20)
+  email         String?       @db.VarChar(160)
+  direccion     String?       @db.VarChar(200)
+  ciudad        String?       @db.VarChar(80)
+  observaciones String?       @db.Text
+  activo        Boolean       @default(true)
+  creadoEn      DateTime      @default(now()) @map("creado_en")
+  actualizadoEn DateTime      @updatedAt @map("actualizado_en")
+
+  ventas Venta[]
+
+  @@index([nombre])
+  @@index([activo])
+  @@map("clientes")
+}
+
+// ---------------------------------------------------------------------------
+// Ventas
+// ---------------------------------------------------------------------------
+
+model Venta {
+  id     String @id @default(uuid()) @db.Uuid
+  // Consecutivo legible para el contrato. Secuencia de Postgres.
+  numero Int    @unique @default(autoincrement())
+
+  loteId    String @map("lote_id") @db.Uuid
+  clienteId String @map("cliente_id") @db.Uuid
+
+  // "El precio se negocia con cada cliente" (documento original), por lo
+  // que es independiente del precio de lista del lote.
+  precioNegociado Decimal     @map("precio_negociado") @db.Decimal(14, 2)
+  fechaVenta      DateTime    @map("fecha_venta") @db.Date
+  estado          EstadoVenta @default(ACTIVA)
+  observaciones   String?     @db.Text
+
+  registradoPorId String   @map("registrado_por_id") @db.Uuid
+  creadoEn        DateTime @default(now()) @map("creado_en")
+  actualizadoEn   DateTime @updatedAt @map("actualizado_en")
+
+  // Anulacion: nunca se borra una venta.
+  anuladoEn      DateTime? @map("anulado_en")
+  anuladoPorId   String?   @map("anulado_por_id") @db.Uuid
+  motivoAnulacion String?  @map("motivo_anulacion") @db.Text
+
+  lote          Lote      @relation(fields: [loteId], references: [id], onDelete: Restrict)
+  cliente       Cliente   @relation(fields: [clienteId], references: [id], onDelete: Restrict)
+  registradoPor Usuario   @relation("ventaRegistradaPor", fields: [registradoPorId], references: [id], onDelete: Restrict)
+  anuladoPor    Usuario?  @relation("ventaAnuladaPor", fields: [anuladoPorId], references: [id], onDelete: Restrict)
+
+  plan      PlanPago?
+  pagos     Pago[]
+  contratos Contrato[]
+
+  @@index([loteId])
+  @@index([clienteId])
+  @@index([estado])
+  @@index([fechaVenta])
+  @@map("ventas")
+}
+
+// ---------------------------------------------------------------------------
+// Plan de pago
+// ---------------------------------------------------------------------------
+// Reconcilia el documento ("dos pagos: inicial y final") con el codigo del
+// v0 (abonos libres ilimitados). El plan por defecto son dos cuotas, pero la
+// estructura admite N sin cambiar el resto del sistema.
+// ---------------------------------------------------------------------------
+
+model PlanPago {
+  id        String        @id @default(uuid()) @db.Uuid
+  ventaId   String        @unique @map("venta_id") @db.Uuid
+  modalidad ModalidadPlan
+  cuotaInicial     Decimal  @map("cuota_inicial") @db.Decimal(14, 2)
+  saldoFinanciado  Decimal  @map("saldo_financiado") @db.Decimal(14, 2)
+  numeroCuotas     Int      @map("numero_cuotas")
+  creadoEn         DateTime @default(now()) @map("creado_en")
+
+  venta  Venta   @relation(fields: [ventaId], references: [id], onDelete: Cascade)
+  cuotas Cuota[]
+
+  @@map("planes_pago")
+}
+
+model Cuota {
+  id               String   @id @default(uuid()) @db.Uuid
+  planId           String   @map("plan_id") @db.Uuid
+  numero           Int
+  tipo             TipoPago
+  montoEsperado    Decimal  @map("monto_esperado") @db.Decimal(14, 2)
+  fechaVencimiento DateTime @map("fecha_vencimiento") @db.Date
+  descripcion      String   @db.VarChar(80)
+
+  plan  PlanPago @relation(fields: [planId], references: [id], onDelete: Cascade)
+  pagos Pago[]
+
+  @@unique([planId, numero])
+  @@index([fechaVencimiento])
+  @@map("cuotas")
+}
+
+// ---------------------------------------------------------------------------
+// Pagos
+// ---------------------------------------------------------------------------
+
+model Pago {
+  id      String     @id @default(uuid()) @db.Uuid
+  ventaId String     @map("venta_id") @db.Uuid
+  cuotaId String?    @map("cuota_id") @db.Uuid
+  tipo    TipoPago
+  monto   Decimal    @db.Decimal(14, 2)
+  fecha   DateTime   @db.Date
+  metodo  MetodoPago
+  referencia String? @db.VarChar(60)
+  concepto   String? @db.VarChar(200)
+
+  // El v0 eliminaba el registro del arreglo (Pagos.jsx:395) y el dinero
+  // desaparecia sin huella. Aqui se anula y queda la trazabilidad completa.
+  anulado         Boolean   @default(false)
+  anuladoEn       DateTime? @map("anulado_en")
+  anuladoPorId    String?   @map("anulado_por_id") @db.Uuid
+  motivoAnulacion String?   @map("motivo_anulacion") @db.Text
+
+  registradoPorId String   @map("registrado_por_id") @db.Uuid
+  creadoEn        DateTime @default(now()) @map("creado_en")
+
+  venta         Venta    @relation(fields: [ventaId], references: [id], onDelete: Restrict)
+  cuota         Cuota?   @relation(fields: [cuotaId], references: [id], onDelete: SetNull)
+  registradoPor Usuario  @relation("pagoRegistradoPor", fields: [registradoPorId], references: [id], onDelete: Restrict)
+  anuladoPor    Usuario? @relation("pagoAnuladoPor", fields: [anuladoPorId], references: [id], onDelete: Restrict)
+
+  @@index([ventaId, anulado])
+  @@index([fecha])
+  @@index([cuotaId])
+  @@map("pagos")
+}
+
+// ---------------------------------------------------------------------------
+// Contratos
+// ---------------------------------------------------------------------------
+
+model Contrato {
+  id      String @id @default(uuid()) @db.Uuid
+  ventaId String @map("venta_id") @db.Uuid
+  // Consecutivo del contrato, independiente del de la venta.
+  // NO es unico por si solo: las revisiones de un mismo contrato
+  // comparten numero y se distinguen por la version. La unicidad real es
+  // la pareja (numero, version).
+  numero  String @db.VarChar(30)
+  version Int    @default(1)
+
+  // Ruta en el almacenamiento y hash de integridad: permite demostrar que
+  // el PDF archivado es exactamente el que se firmo.
+  storageKey String  @map("storage_key") @db.VarChar(300)
+  sha256     String  @db.Char(64)
+  bytes      Int
+
+  // Instantanea de los datos al momento de generar. Si el cliente cambia de
+  // direccion despues, el contrato sigue reflejando lo que se firmo.
+  datosSnapshot Json @map("datos_snapshot")
+
+  generadoPorId String   @map("generado_por_id") @db.Uuid
+  generadoEn    DateTime @default(now()) @map("generado_en")
+
+  venta       Venta   @relation(fields: [ventaId], references: [id], onDelete: Restrict)
+  generadoPor Usuario @relation(fields: [generadoPorId], references: [id], onDelete: Restrict)
+
+  @@unique([numero, version])
+  @@unique([ventaId, version])
+  @@index([ventaId])
+  @@index([numero])
+  @@map("contratos")
+}
+
+// ---------------------------------------------------------------------------
+// Configuracion de la empresa
+// ---------------------------------------------------------------------------
+// El modulo Configuracion del v0 eran 4 lineas con solo el titulo. Estos
+// datos alimentan el encabezado y las clausulas del contrato generado.
+// ---------------------------------------------------------------------------
+
+model ConfiguracionEmpresa {
+  id                     Int      @id @default(1)
+  razonSocial            String   @map("razon_social") @db.VarChar(160)
+  nit                    String   @db.VarChar(20)
+  direccion              String   @db.VarChar(200)
+  ciudad                 String   @db.VarChar(80)
+  telefono               String   @db.VarChar(20)
+  email                  String   @db.VarChar(160)
+  representanteLegal     String   @map("representante_legal") @db.VarChar(120)
+  documentoRepresentante String   @map("documento_representante") @db.VarChar(20)
+  clausulasContrato      String?  @map("clausulas_contrato") @db.Text
+  actualizadoEn          DateTime @updatedAt @map("actualizado_en")
+
+  @@map("configuracion_empresa")
+}
+
+// ---------------------------------------------------------------------------
+// Auditoria
+// ---------------------------------------------------------------------------
+// El v0 no tenia ninguna: no habia forma de saber quien registro o borro un
+// pago. Toda operacion que mueve dinero o cambia un estado escribe aqui.
+// ---------------------------------------------------------------------------
+
+model AuditLog {
+  id        String   @id @default(uuid()) @db.Uuid
+  usuarioId String?  @map("usuario_id") @db.Uuid
+  accion    String   @db.VarChar(60)
+  entidad   String   @db.VarChar(40)
+  entidadId String?  @map("entidad_id") @db.VarChar(64)
+  antes     Json?
+  despues   Json?
+  ip        String?  @db.VarChar(45)
+  userAgent String?  @map("user_agent") @db.VarChar(300)
+  creadoEn  DateTime @default(now()) @map("creado_en")
+
+  usuario Usuario? @relation(fields: [usuarioId], references: [id], onDelete: SetNull)
+
+  @@index([entidad, entidadId])
+  @@index([usuarioId])
+  @@index([creadoEn])
+  @@map("audit_log")
+}

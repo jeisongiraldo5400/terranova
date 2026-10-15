@@ -1,0 +1,63 @@
+# ===========================================================================
+# TERRANOVA - entorno local completo
+#   docker compose -f infra/docker-compose.yml up -d
+# ===========================================================================
+
+name: terranova
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: terranova-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-terranova}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-terranova_local}
+      POSTGRES_DB: ${POSTGRES_DB:-terranova}
+      # Ordenamiento y acentos correctos para busquedas en espanol
+      POSTGRES_INITDB_ARGS: '--locale=es_CO.UTF-8 --encoding=UTF8'
+      # UTC a proposito, NO America/Bogota.
+      #
+      # Las fechas de negocio (venta, pago, vencimiento) son columnas DATE.
+      # Al convertir un timestamp UTC a DATE, Postgres lo reinterpreta en la
+      # zona de la sesion: con TZ=America/Bogota (UTC-5), el instante
+      # 2026-09-01T00:00:00Z cae el 2026-08-31 19:00 local y la fecha se
+      # guardaba un dia antes. Una venta del 1 de septiembre terminaba
+      # registrada el 31 de agosto.
+      #
+      # Se almacena en UTC y se presenta en hora de Colombia en la interfaz.
+      TZ: UTC
+      PGTZ: UTC
+    ports:
+      - '${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-terranova} -d ${POSTGRES_DB:-terranova}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Almacenamiento de los contratos PDF generados por la API.
+  minio:
+    image: minio/minio:latest
+    container_name: terranova-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_USER:-terranova}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD:-terranova_local}
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres-data:
+  minio-data:

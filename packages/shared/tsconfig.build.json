@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // CommonJS es el denominador comun: lo consume la API de Nest (CJS) y
+    // Next.js lo resuelve sin problema. Los imports relativos llevan
+    // extension .js, que es valida en los dos sistemas de modulos.
+    "module": "CommonJS",
+    "moduleResolution": "Node10",
+    "outDir": "dist",
+    "rootDir": "src",
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["src/**/*.test.ts", "src/__tests__/**"]
+}

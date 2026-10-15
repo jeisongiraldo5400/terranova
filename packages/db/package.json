@@ -1,0 +1,42 @@
+{
+  "name": "@terranova/db",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "generated"
+  ],
+  "scripts": {
+    "generate": "prisma generate",
+    "build": "prisma generate && tsc -p tsconfig.build.json",
+    "migrate": "prisma migrate dev",
+    "deploy": "prisma migrate deploy",
+    "studio": "prisma studio",
+    "seed": "tsx prisma/seed.ts",
+    "validate": "prisma validate",
+    "format": "prisma format",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist generated .turbo *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@prisma/client": "catalog:",
+    "@terranova/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@terranova/config": "workspace:*",
+    "@types/node": "^22.19.1",
+    "argon2": "^0.44.0",
+    "prisma": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "dotenv": "^17.2.5"
+  }
+}

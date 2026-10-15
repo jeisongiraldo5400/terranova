@@ -1,0 +1,32 @@
+{
+  "name": "terranova",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sistema de Administracion de Lotes - monorepo",
+  "packageManager": "pnpm@12.9.1",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "test": "turbo test",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "clean": "turbo clean && rm -rf node_modules",
+    "db:generate": "pnpm --filter @terranova/db run generate",
+    "db:migrate": "pnpm --filter @terranova/db run migrate",
+    "db:deploy": "pnpm --filter @terranova/db run deploy",
+    "db:seed": "pnpm --filter @terranova/db run seed",
+    "db:studio": "pnpm --filter @terranova/db run studio",
+    "db:reset": "pnpm --filter @terranova/db run reset",
+    "up": "docker compose -f infra/docker-compose.yml up -d",
+    "down": "docker compose -f infra/docker-compose.yml down",
+    "logs": "docker compose -f infra/docker-compose.yml logs -f",
+    "migrar:legacy": "pnpm --filter @terranova/migracion-localstorage run start",
+    "verificar:rutas": "bash infra/scripts/verificar-rutas.sh"
+  },
+  "devDependencies": {
+    "turbo": "^2.5.8",
+    "typescript": "catalog:",
+    "prettier": "^3.6.2"
+  }
+}

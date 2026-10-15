@@ -1,0 +1,14 @@
+{
+  "extends": "../../packages/config/typescript/nest.json",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src",
+    "types": ["node"],
+    // Dentro de dist a proposito: `nest build` usa deleteOutDir, y si el
+    // tsbuildinfo vive fuera, tsc cree que la salida sigue vigente y omite
+    // archivos recien agregados. Aqui se borra junto con dist.
+    "tsBuildInfoFile": "dist/.tsbuildinfo"
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "test"]
+}

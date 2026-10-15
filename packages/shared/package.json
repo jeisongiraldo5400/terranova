@@ -1,0 +1,30 @@
+{
+  "name": "@terranova/shared",
+  "version": "1.0.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
+    "./domain": { "types": "./dist/domain/index.d.ts", "default": "./dist/domain/index.js" },
+    "./schemas": { "types": "./dist/schemas/index.d.ts", "default": "./dist/schemas/index.js" },
+    "./enums": { "types": "./dist/enums/index.d.ts", "default": "./dist/enums/index.js" }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "clean": "rm -rf dist .turbo *.tsbuildinfo"
+  },
+  "dependencies": {
+    "decimal.js": "^10.6.0",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@terranova/config": "workspace:*",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "extends": "../config/typescript/library.json",
+  "compilerOptions": { "composite": false, "noEmit": true, "rootDir": ".", "outDir": "dist" },
+  "include": ["src/**/*", "vitest.config.ts"]
+}

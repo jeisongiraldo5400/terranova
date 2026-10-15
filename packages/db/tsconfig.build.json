@@ -1,0 +1,18 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "moduleResolution": "Node10",
+    "outDir": "dist",
+    "rootDir": "src",
+    "types": ["node"],
+    "noUncheckedIndexedAccess": false,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true
+  },
+  // Emite src/ -> dist/. El cliente de Prisma vive en ../generated, que
+  // desde dist/ resuelve a packages/db/generated: la ruta relativa se
+  // mantiene valida tras compilar.
+  "include": ["src/**/*"]
+}

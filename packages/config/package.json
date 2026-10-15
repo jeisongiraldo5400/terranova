@@ -1,0 +1,12 @@
+{
+  "name": "@terranova/config",
+  "version": "1.0.0",
+  "private": true,
+  "exports": {
+    "./typescript/base": "./typescript/base.json",
+    "./typescript/library": "./typescript/library.json",
+    "./typescript/nest": "./typescript/nest.json",
+    "./typescript/next": "./typescript/next.json",
+    "./tailwind/tokens.css": "./tailwind/tokens.css"
+  }
+}
