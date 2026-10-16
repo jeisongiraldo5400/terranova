@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { api } from '@/lib/api';
 import type { Cliente, Pagina } from '@/lib/tipos';
 import { EncabezadoPagina } from '@/components/encabezado';
-import { Badge, Card, Tabla, Td, Th, Vacio } from '@/components/ui';
+import { Badge, Card, Fila, Tabla, Td, Th, Vacio } from '@/components/ui';
+import { IconoFlecha } from '@/components/iconos';
 import { BuscadorClientes } from './buscador';
 
 export default async function PaginaClientes({
@@ -23,7 +24,7 @@ export default async function PaginaClientes({
       />
 
       <Card>
-        <div className="border-b border-muted-200 p-4">
+        <div className="border-b border-muted-200/70 p-4">
           <BuscadorClientes valor={q.buscar ?? ''} />
         </div>
 
@@ -36,8 +37,8 @@ export default async function PaginaClientes({
           <Tabla>
             <thead>
               <tr>
+                <Th>Cliente</Th>
                 <Th>Documento</Th>
-                <Th>Nombre</Th>
                 <Th>Teléfono</Th>
                 <Th>Ciudad</Th>
                 <Th alinear="center">Compras</Th>
@@ -47,26 +48,40 @@ export default async function PaginaClientes({
             </thead>
             <tbody>
               {clientes.datos.map((c) => (
-                <tr key={c.id} className="hover:bg-muted-100">
-                  <Td className="tabular font-mono">{c.documento}</Td>
-                  <Td className="font-medium text-ink-900">{c.nombre}</Td>
+                <Fila key={c.id}>
+                  <Td>
+                    <div className="flex items-center gap-3">
+                      <span className="grid size-8 shrink-0 place-items-center rounded-full bg-brand-50 text-2xs font-semibold text-brand-700">
+                        {c.nombre.split(' ').slice(0, 2).map((p) => p[0]).join('').toUpperCase()}
+                      </span>
+                      <span className="min-w-0 truncate font-medium text-ink-900">{c.nombre}</span>
+                    </div>
+                  </Td>
+                  <Td className="tabular font-mono text-xs text-muted-600">{c.documento}</Td>
                   <Td className="tabular text-muted-600">{c.telefono}</Td>
-                  <Td className="text-muted-600">{c.ciudad ?? '—'}</Td>
-                  <Td alinear="center" className="tabular">{c._count?.ventas ?? 0}</Td>
+                  <Td className="text-muted-500">{c.ciudad ?? '—'}</Td>
                   <Td alinear="center">
-                    <Badge tono={c.activo ? 'exito' : 'neutro'}>
+                    {c._count?.ventas ? (
+                      <Badge tono="marca">{c._count.ventas}</Badge>
+                    ) : (
+                      <span className="text-muted-300">—</span>
+                    )}
+                  </Td>
+                  <Td alinear="center">
+                    <Badge tono={c.activo ? 'exito' : 'neutro'} punto>
                       {c.activo ? 'Activo' : 'Inactivo'}
                     </Badge>
                   </Td>
                   <Td alinear="right">
                     <Link
                       href={`/clientes/${c.id}`}
-                      className="text-sm font-medium text-brand-600 hover:text-brand-700"
+                      className="transicion-suave inline-flex size-8 items-center justify-center rounded-[--radius-control] text-muted-400 hover:bg-brand-50 hover:text-brand-700"
+                      aria-label={`Ver ficha de ${c.nombre}`}
                     >
-                      Ver
+                      <IconoFlecha className="size-4" />
                     </Link>
                   </Td>
-                </tr>
+                </Fila>
               ))}
             </tbody>
           </Tabla>

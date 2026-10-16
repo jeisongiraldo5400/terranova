@@ -14,7 +14,6 @@ export function AccionesVenta({
   ventaId: string;
   saldo: string;
   puedePagar: boolean;
-  puedeAnular: boolean;
   puedeContrato: boolean;
   contratos: Array<{ id: string; numero: string; version: number }>;
 }) {

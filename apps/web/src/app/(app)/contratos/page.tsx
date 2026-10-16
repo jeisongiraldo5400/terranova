@@ -1,7 +1,8 @@
 import { api } from '@/lib/api';
 import type { Contrato } from '@/lib/tipos';
 import { EncabezadoPagina } from '@/components/encabezado';
-import { Card, Money, Tabla, Td, Th, Vacio } from '@/components/ui';
+import { Badge, Card, CeldaDoble, Fila, Money, Tabla, Td, Th, Vacio } from '@/components/ui';
+import { IconoDescargar } from '@/components/iconos';
 import { fechaCorta } from '@/lib/formato';
 
 export default async function PaginaContratos() {
@@ -36,25 +37,26 @@ export default async function PaginaContratos() {
             </thead>
             <tbody>
               {contratos.map((c) => (
-                <tr key={c.id} className="hover:bg-muted-100">
+                <Fila key={c.id}>
                   <Td className="font-mono font-medium text-ink-900">{c.numero}</Td>
-                  <Td alinear="center" className="tabular">v{c.version}</Td>
+                  <Td alinear="center"><Badge tono="neutro">v{c.version}</Badge></Td>
                   <Td className="tabular whitespace-nowrap text-muted-600">
                     {fechaCorta(c.generadoEn)}
                     <span className="block text-xs">{c.generadoPor?.nombre}</span>
                   </Td>
                   <Td>
-                    <span className="font-mono text-ink-900">{c.venta?.lote.codigo}</span>
-                    <span className="block max-w-[9rem] truncate text-xs text-muted-500">
-                      {c.venta?.lote.proyecto.nombre}
-                    </span>
+                    <CeldaDoble
+                      principal={c.venta?.lote.codigo}
+                      secundario={c.venta?.lote.proyecto.nombre}
+                      mono
+                    />
                   </Td>
                   <Td className="max-w-[13rem] truncate">{c.venta?.cliente.nombre}</Td>
                   <Td alinear="right">
                     <Money valor={c.venta?.precioNegociado ?? '0'} />
                   </Td>
                   <Td
-                    className="font-mono text-[10px] text-muted-500"
+                    className="font-mono text-2xs text-muted-400"
                     title={`${c.sha256} · ${c.bytes} bytes`}
                   >
                     {c.sha256.slice(0, 12)}…
@@ -64,12 +66,13 @@ export default async function PaginaContratos() {
                       href={`/api/contratos/${c.id}/pdf`}
                       target="_blank"
                       rel="noreferrer"
-                      className="text-sm font-medium text-brand-600 hover:text-brand-700"
+                      className="transicion-suave inline-flex items-center gap-1.5 rounded-[--radius-control] px-2.5 py-1.5 text-xs font-medium text-brand-700 hover:bg-brand-50"
                     >
-                      Abrir PDF
+                      <IconoDescargar className="size-3.5" />
+                      PDF
                     </a>
                   </Td>
-                </tr>
+                </Fila>
               ))}
             </tbody>
           </Tabla>

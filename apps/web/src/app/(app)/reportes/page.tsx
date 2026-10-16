@@ -1,7 +1,8 @@
 import { api } from '@/lib/api';
 import type { ProyectoResumen, VentaCuenta } from '@/lib/tipos';
 import { EncabezadoPagina } from '@/components/encabezado';
-import { Badge, Card, CardEncabezado, Money, Tabla, Td, Th, TONO_CARTERA, Vacio } from '@/components/ui';
+import { Badge, Card, CardEncabezado, CeldaDoble, Fila, Money, Tabla, Td, Th, TONO_CARTERA, Vacio } from '@/components/ui';
+import { IconoDescargar } from '@/components/iconos';
 import { area, fechaCorta } from '@/lib/formato';
 import { ETIQUETA_ESTADO_CARTERA } from '@terranova/shared';
 
@@ -41,9 +42,10 @@ export default async function PaginaReportes({
               <a
                 key={r}
                 href={`/api/reportes/exportar/${r}${qs ? `${qs}&` : '?'}reporte=${r}`}
-                className="rounded-[--radius-control] bg-white px-3.5 py-2 text-sm font-medium text-ink-700 ring-1 ring-inset ring-muted-300 hover:bg-muted-100"
+                className="transicion-suave inline-flex h-10 items-center gap-2 rounded-[--radius-control] bg-white px-4 text-sm font-medium text-ink-700 shadow-[--shadow-card] ring-1 ring-inset ring-muted-200 hover:bg-muted-50 hover:ring-muted-300"
               >
-                ↓ {r.charAt(0).toUpperCase() + r.slice(1)} CSV
+                <IconoDescargar className="size-4" />
+                {r.charAt(0).toUpperCase() + r.slice(1)}
               </a>
             ))}
           </div>
@@ -74,9 +76,9 @@ export default async function PaginaReportes({
                         notation: 'compact', maximumFractionDigits: 1,
                       }).format(Number(p.por_cobrar))}
                     </span>
-                    <div className="relative min-h-0 w-full flex-1">
+                    <div className="relative min-h-0 w-full flex-1 rounded-t bg-muted-100/60">
                       <div
-                        className={`absolute inset-x-0 bottom-0 rounded-t ${vencido ? 'bg-danger-600' : 'bg-brand-600'}`}
+                        className={`absolute inset-x-0 bottom-0 rounded-t bg-gradient-to-t ${vencido ? 'from-danger-600 to-danger-500' : 'from-brand-600 to-brand-500'}`}
                         style={{ height: `${Math.max(alto, 2)}%` }}
                         title={`${p.mes}: ${p.por_cobrar} (${p.cuotas} cuotas)`}
                       />
@@ -120,18 +122,14 @@ export default async function PaginaReportes({
             </thead>
             <tbody>
               {cartera.map((f) => (
-                <tr key={f.venta_numero} className="hover:bg-muted-100">
+                <Fila key={f.venta_numero}>
                   <Td className="tabular">#{f.venta_numero}</Td>
                   <Td>
-                    <span className="font-mono font-medium text-ink-900">{f.lote_codigo}</span>
-                    <span className="block max-w-[9rem] truncate text-xs text-muted-500">{f.proyecto_nombre}</span>
+                    <CeldaDoble principal={f.lote_codigo} secundario={f.proyecto_nombre} mono />
                   </Td>
-                  <Td alinear="right" className="tabular">{area(f.area_m2)}</Td>
+                  <Td alinear="right" className="tabular whitespace-nowrap">{area(f.area_m2)}</Td>
                   <Td className="max-w-[12rem]">
-                    <span className="block truncate">{f.cliente_nombre}</span>
-                    <span className="tabular block text-xs text-muted-500">
-                      {f.cliente_documento}
-                    </span>
+                    <CeldaDoble principal={f.cliente_nombre} secundario={f.cliente_documento} />
                   </Td>
                   <Td className="tabular whitespace-nowrap text-muted-600">
                     {fechaCorta(f.fecha_venta)}
@@ -152,11 +150,11 @@ export default async function PaginaReportes({
                     )}
                   </Td>
                   <Td alinear="center">
-                    <Badge tono={TONO_CARTERA[f.estado_cartera] ?? 'neutro'}>
+                    <Badge tono={TONO_CARTERA[f.estado_cartera] ?? 'neutro'} punto>
                       {ETIQUETA_ESTADO_CARTERA[f.estado_cartera as 'PAGADO'] ?? f.estado_cartera}
                     </Badge>
                   </Td>
-                </tr>
+                </Fila>
               ))}
             </tbody>
           </Tabla>

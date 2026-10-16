@@ -1,7 +1,7 @@
-import Link from 'next/link';
 import { api } from '@/lib/api';
 import { EncabezadoPagina } from '@/components/encabezado';
-import { Badge, Card, CardEncabezado, Indicador, Money, Tabla, Td, Th, TONO_CARTERA, Vacio } from '@/components/ui';
+import { Badge, Card, CardEncabezado, CeldaDoble, Fila, Indicador, Money, Tabla, Td, Th, TONO_CARTERA, Vacio, montoCompacto } from '@/components/ui';
+import { IconoDinero, IconoMora, IconoPorCobrar, IconoRecaudo } from '@/components/iconos';
 import { fechaCorta } from '@/lib/formato';
 import { ETIQUETA_ESTADO_CARTERA, ETIQUETA_TIPO_DOCUMENTO } from '@terranova/shared';
 
@@ -26,21 +26,18 @@ export default async function FichaCliente({ params }: { params: Promise<{ id: s
       <EncabezadoPagina
         titulo={c.nombre}
         descripcion={`${ETIQUETA_TIPO_DOCUMENTO[c.tipoDocumento as 'CC'] ?? c.tipoDocumento} ${c.documento}`}
-        acciones={
-          <Link href="/clientes" className="text-sm font-medium text-brand-600 hover:text-brand-700">
-            ← Clientes
-          </Link>
-        }
+        volver={{ href: '/clientes', etiqueta: 'Clientes' }}
       />
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Indicador etiqueta="Total comprado" valor={fmt(c.totales.comprado)} tono="marca" />
-        <Indicador etiqueta="Pagado" valor={fmt(c.totales.pagado)} tono="exito" />
-        <Indicador etiqueta="Saldo" valor={fmt(c.totales.saldo)} tono="alerta" />
+        <Indicador etiqueta="Total comprado" valor={montoCompacto(c.totales.comprado)} tono="marca" icono={<IconoDinero className="size-5" />} />
+        <Indicador etiqueta="Pagado" valor={montoCompacto(c.totales.pagado)} tono="exito" icono={<IconoRecaudo className="size-5" />} />
+        <Indicador etiqueta="Saldo" valor={montoCompacto(c.totales.saldo)} tono="alerta" icono={<IconoPorCobrar className="size-5" />} />
         <Indicador
           etiqueta="En mora"
-          valor={fmt(c.totales.en_mora)}
+          valor={montoCompacto(c.totales.en_mora)}
           tono={Number(c.totales.en_mora) > 0 ? 'peligro' : 'neutro'}
+          icono={<IconoMora className="size-5" />}
         />
       </section>
 
@@ -55,7 +52,7 @@ export default async function FichaCliente({ params }: { params: Promise<{ id: s
             <div>
               <dt className="text-xs text-muted-500">Estado</dt>
               <dd className="mt-1">
-                <Badge tono={c.activo ? 'exito' : 'neutro'}>
+                <Badge tono={c.activo ? 'exito' : 'neutro'} punto>
                   {c.activo ? 'Activo' : 'Inactivo'}
                 </Badge>
               </dd>
@@ -84,7 +81,7 @@ export default async function FichaCliente({ params }: { params: Promise<{ id: s
               </thead>
               <tbody>
                 {c.cartera.map((v) => (
-                  <tr key={v.venta_id} className="hover:bg-muted-100">
+                  <Fila key={v.venta_id}>
                     <Td className="tabular">#{v.venta_numero}</Td>
                     <Td>
                       <span className="font-medium text-ink-900">{v.lote_codigo}</span>
@@ -94,11 +91,11 @@ export default async function FichaCliente({ params }: { params: Promise<{ id: s
                     <Td alinear="right"><Money valor={v.total_pagado} tono="exito" /></Td>
                     <Td alinear="right"><Money valor={v.saldo} /></Td>
                     <Td alinear="center">
-                      <Badge tono={TONO_CARTERA[v.estado_cartera] ?? 'neutro'}>
+                      <Badge tono={TONO_CARTERA[v.estado_cartera] ?? 'neutro'} punto>
                         {ETIQUETA_ESTADO_CARTERA[v.estado_cartera as 'PAGADO'] ?? v.estado_cartera}
                       </Badge>
                     </Td>
-                  </tr>
+                  </Fila>
                 ))}
               </tbody>
             </Tabla>
@@ -118,7 +115,3 @@ function Dato({ etiqueta, valor }: { etiqueta: string; valor: string | null }) {
   );
 }
 
-const fmt = (v: string) =>
-  new Intl.NumberFormat('es-CO', {
-    style: 'currency', currency: 'COP', maximumFractionDigits: 0, notation: 'compact',
-  }).format(Number(v));

@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ETIQUETA_ESTADO_CARTERA } from '@terranova/shared';
 import type { ProyectoResumen } from '@/lib/tipos';
 import { Entrada, Seleccion } from '@/components/controles';
+import { IconoBuscar } from '@/components/iconos';
 import { conQuery } from '@/lib/rutas';
 
 export function FiltrosVentas({
@@ -27,6 +28,7 @@ export function FiltrosVentas({
         defaultValue={valores.buscar ?? ''}
         onChange={(e) => actualizar('buscar', e.target.value)}
         aria-label="Buscar venta"
+        icono={<IconoBuscar className="size-4" />}
       />
       <Seleccion
         defaultValue={valores.proyectoId ?? ''}

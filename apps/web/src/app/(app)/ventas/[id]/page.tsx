@@ -1,16 +1,16 @@
-import Link from 'next/link';
-import { api } from '@/lib/api';
-import { exigirSesion } from '@/lib/sesion';
-import { EncabezadoPagina } from '@/components/encabezado';
-import {
-  Aviso, Badge, Card, CardEncabezado, Indicador, Money, Progreso,
-  Tabla, Td, Th, TONO_CARTERA, TONO_ESTADO_VENTA, Vacio,
-} from '@/components/ui';
-import { area, fechaCorta, fechaLarga } from '@/lib/formato';
 import {
   ETIQUETA_ESTADO_CARTERA, ETIQUETA_ESTADO_VENTA, ETIQUETA_METODO_PAGO,
   ETIQUETA_TIPO_PAGO, Permiso, tienePermiso,
 } from '@terranova/shared';
+import { api } from '@/lib/api';
+import { exigirSesion } from '@/lib/sesion';
+import { EncabezadoPagina } from '@/components/encabezado';
+import {
+  Aviso, Badge, Card, CardEncabezado, Fila, Indicador, Money, Progreso,
+  TONO_CARTERA, TONO_ESTADO_VENTA, Tabla, Td, Th, Vacio, montoCompacto,
+} from '@/components/ui';
+import { IconoDinero, IconoMora, IconoPorCobrar, IconoRecaudo } from '@/components/iconos';
+import { area, fechaCorta, fechaLarga } from '@/lib/formato';
 import { AccionesVenta } from './acciones';
 
 export default async function DetalleVenta({ params }: { params: Promise<{ id: string }> }) {
@@ -18,10 +18,8 @@ export default async function DetalleVenta({ params }: { params: Promise<{ id: s
   const [usuario, v] = await Promise.all([exigirSesion(), api.get<any>(`/ventas/${id}`)]);
 
   const puedePagar = tienePermiso(usuario.rol, Permiso.PAGO_CREAR);
-  const puedeAnular = tienePermiso(usuario.rol, Permiso.PAGO_ANULAR);
   const puedeContrato = tienePermiso(usuario.rol, Permiso.CONTRATO_GENERAR);
   const verPagos = tienePermiso(usuario.rol, Permiso.PAGO_VER);
-
   const anulada = v.estado === 'ANULADA';
 
   return (
@@ -29,70 +27,87 @@ export default async function DetalleVenta({ params }: { params: Promise<{ id: s
       <EncabezadoPagina
         titulo={`Venta #${v.numero}`}
         descripcion={`${v.lote.codigo} · ${v.lote.proyecto.nombre} · ${fechaLarga(v.fechaVenta)}`}
-        acciones={
-          <Link href="/ventas" className="text-sm font-medium text-brand-600 hover:text-brand-700">
-            ← Ventas
-          </Link>
-        }
+        volver={{ href: '/ventas', etiqueta: 'Ventas' }}
       />
 
       {anulada && (
         <div className="mb-4">
           <Aviso tono="peligro" titulo="Venta anulada">
             {v.motivoAnulacion}
-            {v.anuladoPor && <span className="block text-xs opacity-80">Por {v.anuladoPor.nombre}</span>}
+            {v.anuladoPor && (
+              <span className="mt-0.5 block text-xs opacity-80">Anulada por {v.anuladoPor.nombre}</span>
+            )}
           </Aviso>
         </div>
       )}
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Indicador etiqueta="Precio negociado" valor={fmt(v.cuenta.precio_negociado)} tono="marca" />
-        <Indicador etiqueta="Pagado" valor={fmt(v.cuenta.total_pagado)} tono="exito" />
-        <Indicador etiqueta="Saldo" valor={fmt(v.cuenta.saldo)} tono={Number(v.cuenta.saldo) > 0 ? 'alerta' : 'exito'} />
+        <Indicador
+          etiqueta="Precio negociado"
+          valor={montoCompacto(v.cuenta.precio_negociado)}
+          tono="marca"
+          icono={<IconoDinero className="size-5" />}
+        />
+        <Indicador
+          etiqueta="Pagado"
+          valor={montoCompacto(v.cuenta.total_pagado)}
+          detalle={`${Number(v.cuenta.porcentaje_pagado).toFixed(1)}% del precio`}
+          tono="exito"
+          icono={<IconoRecaudo className="size-5" />}
+        />
+        <Indicador
+          etiqueta="Saldo"
+          valor={montoCompacto(v.cuenta.saldo)}
+          tono={Number(v.cuenta.saldo) > 0 ? 'alerta' : 'exito'}
+          icono={<IconoPorCobrar className="size-5" />}
+        />
         <Indicador
           etiqueta="En mora"
-          valor={fmt(v.cuenta.total_en_mora)}
-          detalle={v.cuenta.dias_mora_maximo ? `${v.cuenta.dias_mora_maximo} días` : undefined}
+          valor={montoCompacto(v.cuenta.total_en_mora)}
+          detalle={v.cuenta.dias_mora_maximo ? `${v.cuenta.dias_mora_maximo} días vencida` : 'Al día'}
           tono={Number(v.cuenta.total_en_mora) > 0 ? 'peligro' : 'neutro'}
+          icono={<IconoMora className="size-5" />}
         />
       </section>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-3">
+        {/* --- Resumen --- */}
         <Card className="lg:col-span-1">
           <CardEncabezado titulo="Resumen" />
-          <dl className="space-y-3 p-5 text-sm">
-            <div>
-              <dt className="text-xs text-muted-500">Estado</dt>
-              <dd className="mt-1 flex gap-2">
-                <Badge tono={TONO_ESTADO_VENTA[v.estado] ?? 'neutro'}>
-                  {ETIQUETA_ESTADO_VENTA[v.estado as 'ACTIVA']}
+          <div className="p-5">
+            <div className="mb-5 flex flex-wrap gap-2">
+              <Badge tono={TONO_ESTADO_VENTA[v.estado] ?? 'neutro'} punto>
+                {ETIQUETA_ESTADO_VENTA[v.estado as 'ACTIVA']}
+              </Badge>
+              {!anulada && (
+                <Badge tono={TONO_CARTERA[v.cuenta.estado_cartera] ?? 'neutro'} punto>
+                  {ETIQUETA_ESTADO_CARTERA[v.cuenta.estado_cartera as 'PAGADO']}
                 </Badge>
-                {!anulada && (
-                  <Badge tono={TONO_CARTERA[v.cuenta.estado_cartera] ?? 'neutro'}>
-                    {ETIQUETA_ESTADO_CARTERA[v.cuenta.estado_cartera as 'PAGADO']}
-                  </Badge>
-                )}
-              </dd>
+              )}
             </div>
-            <Dato etiqueta="Comprador" valor={v.cliente.nombre} />
-            <Dato etiqueta="Documento" valor={v.cliente.documento} />
-            <Dato etiqueta="Teléfono" valor={v.cliente.telefono} />
-            <Dato etiqueta="Lote" valor={`${v.lote.codigo} · ${area(v.lote.areaM2)}`} />
-            <Dato etiqueta="Etapa" valor={v.lote.etapa?.nombre ?? '—'} />
-            <Dato etiqueta="Registró" valor={v.registradoPor?.nombre ?? '—'} />
-            <div>
-              <dt className="text-xs text-muted-500">Avance</dt>
-              <dd className="mt-1.5">
-                <Progreso
-                  porcentaje={Number(v.cuenta.porcentaje_pagado)}
-                  tono={TONO_CARTERA[v.cuenta.estado_cartera] ?? 'marca'}
-                />
-                <span className="tabular mt-1 block text-xs text-muted-500">
-                  {Number(v.cuenta.porcentaje_pagado).toFixed(1)}% pagado
+
+            <dl className="space-y-3.5 text-sm">
+              <Dato etiqueta="Comprador" valor={v.cliente.nombre} />
+              <Dato etiqueta="Documento" valor={v.cliente.documento} mono />
+              <Dato etiqueta="Teléfono" valor={v.cliente.telefono} mono />
+              <Dato etiqueta="Lote" valor={`${v.lote.codigo} · ${area(v.lote.areaM2)}`} />
+              <Dato etiqueta="Etapa" valor={v.lote.etapa?.nombre ?? '—'} />
+              <Dato etiqueta="Registró" valor={v.registradoPor?.nombre ?? '—'} />
+            </dl>
+
+            <div className="mt-5 border-t border-muted-200 pt-4">
+              <div className="mb-2 flex justify-between text-xs">
+                <span className="text-muted-500">Avance de pago</span>
+                <span className="tabular font-medium text-ink-800">
+                  {Number(v.cuenta.porcentaje_pagado).toFixed(1)}%
                 </span>
-              </dd>
+              </div>
+              <Progreso
+                porcentaje={Number(v.cuenta.porcentaje_pagado)}
+                tono={TONO_CARTERA[v.cuenta.estado_cartera] ?? 'marca'}
+              />
             </div>
-          </dl>
+          </div>
         </Card>
 
         <div className="space-y-4 lg:col-span-2">
@@ -115,16 +130,22 @@ export default async function DetalleVenta({ params }: { params: Promise<{ id: s
               </thead>
               <tbody>
                 {v.cuotasEstado.map((c: any) => (
-                  <tr key={c.cuota_id} className="hover:bg-muted-100">
-                    <Td className="tabular">{c.numero}</Td>
-                    <Td className="text-ink-900">{c.descripcion}</Td>
+                  <Fila key={c.cuota_id}>
+                    <Td className="tabular text-muted-500">{c.numero}</Td>
+                    <Td className="font-medium text-ink-900">{c.descripcion}</Td>
                     <Td className="tabular whitespace-nowrap text-muted-600">
                       {fechaCorta(c.fecha_vencimiento)}
                     </Td>
                     <Td alinear="right"><Money valor={c.monto_esperado} /></Td>
-                    <Td alinear="right"><Money valor={c.monto_cubierto} tono="exito" /></Td>
+                    <Td alinear="right">
+                      <Money
+                        valor={c.monto_cubierto}
+                        tono={Number(c.monto_cubierto) > 0 ? 'exito' : 'tenue'}
+                      />
+                    </Td>
                     <Td alinear="center">
                       <Badge
+                        punto
                         tono={
                           c.estado === 'PAGADA' ? 'exito'
                           : c.estado === 'EN_MORA' ? 'peligro'
@@ -132,11 +153,11 @@ export default async function DetalleVenta({ params }: { params: Promise<{ id: s
                         }
                       >
                         {c.estado === 'PAGADA' ? 'Pagada'
-                          : c.estado === 'EN_MORA' ? `Vencida (${c.dias_vencida}d)`
+                          : c.estado === 'EN_MORA' ? `Vencida ${c.dias_vencida}d`
                           : c.estado === 'PARCIAL' ? 'Parcial' : 'Pendiente'}
                       </Badge>
                     </Td>
-                  </tr>
+                  </Fila>
                 ))}
               </tbody>
             </Tabla>
@@ -153,7 +174,6 @@ export default async function DetalleVenta({ params }: { params: Promise<{ id: s
                     ventaId={v.id}
                     saldo={v.cuenta.saldo}
                     puedePagar={puedePagar && !anulada}
-                    puedeAnular={puedeAnular}
                     puedeContrato={puedeContrato && !anulada}
                     contratos={v.contratos}
                   />
@@ -178,32 +198,34 @@ export default async function DetalleVenta({ params }: { params: Promise<{ id: s
                   </thead>
                   <tbody>
                     {v.pagos.map((p: any) => (
-                      <tr key={p.id} className={p.anulado ? 'opacity-60' : 'hover:bg-muted-100'}>
-                        <Td className="tabular whitespace-nowrap">{fechaCorta(p.fecha)}</Td>
-                        <Td>{ETIQUETA_TIPO_PAGO[p.tipo as 'ABONO']}</Td>
-                        <Td className="text-muted-600">
+                      <Fila key={p.id} className={p.anulado ? 'opacity-55' : ''}>
+                        <Td className="tabular whitespace-nowrap text-muted-600">
+                          {fechaCorta(p.fecha)}
+                        </Td>
+                        <Td className="font-medium text-ink-900">
+                          {ETIQUETA_TIPO_PAGO[p.tipo as 'ABONO']}
+                        </Td>
+                        <Td className="text-muted-500">
                           {ETIQUETA_METODO_PAGO[p.metodo as 'EFECTIVO']}
                         </Td>
-                        <Td className="tabular font-mono text-xs text-muted-600">
-                          {p.referencia ?? '—'}
-                        </Td>
+                        <Td className="font-mono text-2xs text-muted-500">{p.referencia ?? '—'}</Td>
                         <Td alinear="right">
                           <Money
                             valor={p.monto}
-                            className={p.anulado ? 'line-through' : ''}
-                            tono={p.anulado ? undefined : 'exito'}
+                            className={`font-medium ${p.anulado ? 'line-through' : ''}`}
+                            tono={p.anulado ? 'tenue' : 'exito'}
                           />
                         </Td>
                         <Td alinear="center">
                           {p.anulado ? (
-                            <span title={p.motivoAnulacion ?? ''}>
-                              <Badge tono="peligro">Anulado</Badge>
-                            </span>
+                            <Badge tono="peligro" punto title={p.motivoAnulacion ?? ''}>
+                              Anulado
+                            </Badge>
                           ) : (
-                            <Badge tono="exito">Vigente</Badge>
+                            <Badge tono="exito" punto>Vigente</Badge>
                           )}
                         </Td>
-                      </tr>
+                      </Fila>
                     ))}
                   </tbody>
                 </Tabla>
@@ -216,16 +238,13 @@ export default async function DetalleVenta({ params }: { params: Promise<{ id: s
   );
 }
 
-function Dato({ etiqueta, valor }: { etiqueta: string; valor: string }) {
+function Dato({ etiqueta, valor, mono = false }: { etiqueta: string; valor: string; mono?: boolean }) {
   return (
-    <div>
-      <dt className="text-xs text-muted-500">{etiqueta}</dt>
-      <dd className="mt-0.5 text-ink-900">{valor}</dd>
+    <div className="flex items-baseline justify-between gap-3">
+      <dt className="shrink-0 text-xs text-muted-500">{etiqueta}</dt>
+      <dd className={`min-w-0 truncate text-right text-ink-900 ${mono ? 'tabular font-mono text-xs' : ''}`}>
+        {valor}
+      </dd>
     </div>
   );
 }
-
-const fmt = (v: string) =>
-  new Intl.NumberFormat('es-CO', {
-    style: 'currency', currency: 'COP', maximumFractionDigits: 0, notation: 'compact',
-  }).format(Number(v));

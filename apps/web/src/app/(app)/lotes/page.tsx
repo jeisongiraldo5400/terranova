@@ -1,16 +1,16 @@
+import { ETIQUETA_ESTADO_LOTE } from '@terranova/shared';
 import { api } from '@/lib/api';
 import type { Lote, Pagina, ProyectoResumen } from '@/lib/tipos';
 import { EncabezadoPagina } from '@/components/encabezado';
-import { Badge, Card, Money, Tabla, Td, Th, TONO_ESTADO_LOTE, Vacio } from '@/components/ui';
+import {
+  Badge, Card, CeldaDoble, Fila, Money, TONO_ESTADO_LOTE, Tabla, Td, Th, Vacio,
+} from '@/components/ui';
 import { area, fechaCorta } from '@/lib/formato';
-import { ETIQUETA_ESTADO_LOTE } from '@terranova/shared';
 import { FiltrosLotes } from './filtros';
 
 export default async function PaginaLotes({
   searchParams,
-}: {
-  searchParams: Promise<Record<string, string | undefined>>;
-}) {
+}: { searchParams: Promise<Record<string, string | undefined>> }) {
   const q = await searchParams;
 
   const [proyectos, lotes] = await Promise.all([
@@ -28,18 +28,18 @@ export default async function PaginaLotes({
     <>
       <EncabezadoPagina
         titulo="Lotes"
-        descripcion={`${lotes.total} lote(s) · área mínima 1.000 m²`}
+        descripcion={`${lotes.total} lote(s). El área mínima es de 1.000 m², validada por el proyecto.`}
       />
 
       <Card>
-        <div className="border-b border-muted-200 p-4">
+        <div className="border-b border-muted-200/70 p-4">
           <FiltrosLotes proyectos={proyectos} valores={q} />
         </div>
 
         {lotes.datos.length === 0 ? (
           <Vacio
             titulo="Ningún lote coincide"
-            descripcion="Ajuste los filtros o cree lotes en el proyecto."
+            descripcion="Ajuste los filtros o cargue lotes en el proyecto."
           />
         ) : (
           <Tabla>
@@ -50,7 +50,7 @@ export default async function PaginaLotes({
                 <Th>Etapa</Th>
                 <Th alinear="right">Área</Th>
                 <Th alinear="right">Precio lista</Th>
-                <Th>Estado</Th>
+                <Th alinear="center">Estado</Th>
                 <Th>Comprador</Th>
                 <Th alinear="right">Venta</Th>
               </tr>
@@ -59,24 +59,42 @@ export default async function PaginaLotes({
               {lotes.datos.map((l) => {
                 const venta = l.ventas[0];
                 return (
-                  <tr key={l.id} className="hover:bg-muted-100">
-                    <Td className="font-mono font-medium text-ink-900">{l.codigo}</Td>
-                    <Td className="text-muted-600">{l.proyecto.nombre}</Td>
-                    <Td className="text-muted-600">{l.etapa?.nombre ?? '—'}</Td>
-                    <Td alinear="right" className="tabular">{area(l.areaM2)}</Td>
-                    <Td alinear="right"><Money valor={l.precioLista} /></Td>
-                    <Td>
-                      <Badge tono={TONO_ESTADO_LOTE[l.estado] ?? 'neutro'}>
+                  <Fila key={l.id}>
+                    <Td className="font-mono text-xs font-medium text-ink-900">{l.codigo}</Td>
+                    <Td className="max-w-[11rem]">
+                      <span className="block truncate text-muted-600">{l.proyecto.nombre}</span>
+                    </Td>
+                    <Td className="text-muted-500">{l.etapa?.nombre ?? '—'}</Td>
+                    <Td alinear="right" className="tabular whitespace-nowrap">{area(l.areaM2)}</Td>
+                    <Td alinear="right"><Money valor={l.precioLista} className="font-medium" /></Td>
+                    <Td alinear="center">
+                      <Badge tono={TONO_ESTADO_LOTE[l.estado] ?? 'neutro'} punto>
                         {ETIQUETA_ESTADO_LOTE[l.estado]}
                       </Badge>
                     </Td>
-                    <Td className="max-w-[14rem] truncate text-muted-600">
-                      {venta?.cliente.nombre ?? '—'}
+                    <Td className="max-w-[13rem]">
+                      {venta ? (
+                        <CeldaDoble
+                          principal={venta.cliente.nombre}
+                          secundario={venta.cliente.documento}
+                        />
+                      ) : (
+                        <span className="text-muted-300">—</span>
+                      )}
                     </Td>
-                    <Td alinear="right" className="tabular whitespace-nowrap text-muted-600">
-                      {venta ? `${fechaCorta(venta.fechaVenta)} · #${venta.numero}` : '—'}
+                    <Td alinear="right" className="tabular whitespace-nowrap text-muted-500">
+                      {venta ? (
+                        <>
+                          {fechaCorta(venta.fechaVenta)}
+                          <span className="mt-0.5 block text-2xs text-muted-400">
+                            #{venta.numero}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-muted-300">—</span>
+                      )}
                     </Td>
-                  </tr>
+                  </Fila>
                 );
               })}
             </tbody>

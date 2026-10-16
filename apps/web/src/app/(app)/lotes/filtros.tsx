@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { EstadoLote, ETIQUETA_ESTADO_LOTE } from '@terranova/shared';
 import type { ProyectoResumen } from '@/lib/tipos';
 import { Entrada, Seleccion } from '@/components/controles';
+import { IconoBuscar } from '@/components/iconos';
 import { conQuery } from '@/lib/rutas';
 
 /**
@@ -31,6 +32,7 @@ export function FiltrosLotes({
         defaultValue={valores.buscar ?? ''}
         onChange={(e) => actualizar('buscar', e.target.value)}
         aria-label="Buscar lote por código"
+        icono={<IconoBuscar className="size-4" />}
       />
       <Seleccion
         defaultValue={valores.proyectoId ?? ''}

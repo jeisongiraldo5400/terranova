@@ -1,7 +1,7 @@
 import { api } from '@/lib/api';
 import { exigirSesion } from '@/lib/sesion';
 import { EncabezadoPagina } from '@/components/encabezado';
-import { Aviso, Badge, Card, CardEncabezado, Tabla, Td, Th, Vacio } from '@/components/ui';
+import { Aviso, Badge, Card, CardEncabezado, Fila, Tabla, Td, Th, Vacio } from '@/components/ui';
 import { fechaCorta } from '@/lib/formato';
 import { ETIQUETA_ROL, Permiso, tienePermiso } from '@terranova/shared';
 import { FormularioEmpresa } from './formulario-empresa';
@@ -73,11 +73,11 @@ export default async function PaginaConfiguracion() {
                 </thead>
                 <tbody>
                   {usuarios.map((u) => (
-                    <tr key={u.id} className="hover:bg-muted-100">
+                    <Fila key={u.id}>
                       <Td className="font-medium text-ink-900">{u.nombre}</Td>
                       <Td className="text-muted-600">{u.email}</Td>
                       <Td>
-                        <Badge tono={u.rol === 'ADMIN' ? 'marca' : 'neutro'}>
+                        <Badge tono={u.rol === 'ADMIN' ? 'marca' : 'neutro'} punto>
                           {ETIQUETA_ROL[u.rol]}
                         </Badge>
                       </Td>
@@ -85,11 +85,11 @@ export default async function PaginaConfiguracion() {
                         {u.ultimoAcceso ? fechaCorta(u.ultimoAcceso) : 'Nunca'}
                       </Td>
                       <Td alinear="center">
-                        <Badge tono={u.activo ? 'exito' : 'neutro'}>
+                        <Badge tono={u.activo ? 'exito' : 'neutro'} punto>
                           {u.activo ? 'Activo' : 'Inactivo'}
                         </Badge>
                       </Td>
-                    </tr>
+                    </Fila>
                   ))}
                 </tbody>
               </Tabla>

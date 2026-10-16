@@ -1,79 +1,97 @@
 /* ==========================================================================
-   TERRANOVA - Tokens de diseno
+   TERRANOVA - Sistema de diseno
    --------------------------------------------------------------------------
-   La paleta se extrajo del sistema v0 (frontend/src). Todos los valores
-   coinciden exactamente con los que ya usaba la aplicacion, de modo que la
-   identidad visual no cambia:
+   La paleta es la misma del sistema v0: los azules de marca, los verdes de
+   "pagado", los ambares de "reservado" y los rojos de "vendido" se tomaron
+   literalmente del codigo anterior. Lo que cambia es el oficio alrededor:
+   escala tipografica, profundidad, radios y transiciones coherentes.
 
      #1e3a8a  sidebar                  -> brand-900
      #2563eb  boton de accion primaria -> brand-600
      #dbeafe  banner proyecto activo   -> brand-100
-     #eff6ff  fondo de tarjeta info    -> brand-50
      #0f172a  fondo del login          -> ink-900
      #f1f5f9  fondo de la aplicacion   -> surface
-     #16a34a / #22c55e / #dcfce7 / #166534   verdes de "pagado"/"disponible"
-     #dc2626 / #ef4444                       rojos de "vendido"/"eliminar"
-     #f59e0b / #d97706 / #fef3c7             ambares de "reservado"/"pendiente"
-
-   Se descarto el acento morado (#aa3bff) del index.css anterior: era residuo
-   de una plantilla, no parte de la identidad del sistema.
    ========================================================================== */
 
 @theme {
-  /* --- Marca ------------------------------------------------------------ */
+  /* --- Marca: rampa completa a partir de los dos azules originales ----- */
   --color-brand-50: #eff6ff;
   --color-brand-100: #dbeafe;
+  --color-brand-200: #bfdbfe;
+  --color-brand-300: #93c5fd;
+  --color-brand-400: #60a5fa;
   --color-brand-500: #3b82f6;
   --color-brand-600: #2563eb;
   --color-brand-700: #1d4ed8;
+  --color-brand-800: #1e40af;
   --color-brand-900: #1e3a8a;
+  --color-brand-950: #172554;
 
   /* --- Superficies ----------------------------------------------------- */
-  --color-surface: #f1f5f9;
+  --color-surface: #f6f8fb;
   --color-surface-raised: #ffffff;
+  --color-surface-sunken: #eef2f7;
+
+  --color-ink-950: #020617;
   --color-ink-900: #0f172a;
+  --color-ink-800: #1e293b;
   --color-ink-700: #334155;
 
-  /* --- Semanticos: estados de lote, venta y cartera -------------------- */
+  /* --- Semanticos ------------------------------------------------------ */
+  --color-success-50: #f0fdf4;
   --color-success-100: #dcfce7;
   --color-success-500: #22c55e;
   --color-success-600: #16a34a;
+  --color-success-700: #15803d;
   --color-success-800: #166534;
 
+  --color-warning-50: #fffbeb;
   --color-warning-100: #fef3c7;
   --color-warning-500: #f59e0b;
   --color-warning-600: #d97706;
   --color-warning-800: #92400e;
 
+  --color-danger-50: #fef2f2;
   --color-danger-100: #fee2e2;
   --color-danger-500: #ef4444;
   --color-danger-600: #dc2626;
   --color-danger-800: #991b1b;
 
   /* --- Neutros --------------------------------------------------------- */
-  --color-muted-100: #f3f4f6;
-  --color-muted-200: #e5e7eb;
-  --color-muted-300: #d1d5db;
-  --color-muted-400: #9ca3af;
-  --color-muted-500: #6b7280;
-  --color-muted-600: #64748b;
-  --color-muted-700: #475569;
+  --color-muted-50: #f8fafc;
+  --color-muted-100: #f1f5f9;
+  --color-muted-200: #e2e8f0;
+  --color-muted-300: #cbd5e1;
+  --color-muted-400: #94a3b8;
+  --color-muted-500: #64748b;
+  --color-muted-600: #475569;
+  --color-muted-700: #334155;
 
   /* --- Tipografia ------------------------------------------------------ */
-  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-  --font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  /* Inter se carga con next/font en apps/web/src/app/layout.tsx. El resto
+     de la pila es respaldo mientras la fuente no haya llegado. */
+  --font-sans: var(--fuente-inter), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: var(--fuente-mono), ui-monospace, 'SF Mono', Menlo, monospace;
 
-  /* Tabular para columnas de dinero: los digitos quedan alineados */
-  --font-numeric: ui-sans-serif, system-ui, sans-serif;
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
 
-  /* --- Elevacion ------------------------------------------------------- */
-  --shadow-card: 0 1px 2px rgb(15 23 42 / 0.06), 0 1px 3px rgb(15 23 42 / 0.1);
-  --shadow-raised: 0 4px 6px -1px rgb(15 23 42 / 0.1), 0 2px 4px -2px rgb(15 23 42 / 0.06);
-  --shadow-overlay: 0 20px 25px -5px rgb(15 23 42 / 0.15), 0 8px 10px -6px rgb(15 23 42 / 0.1);
+  /* --- Elevacion -------------------------------------------------------
+     Sombras de tinte azulado en lugar de negro puro: sobre un fondo frio
+     el negro se ve sucio. */
+  --shadow-card: 0 1px 2px rgb(15 23 42 / 0.04), 0 1px 3px rgb(15 23 42 / 0.06);
+  --shadow-raised: 0 2px 4px rgb(15 23 42 / 0.04), 0 8px 16px -4px rgb(15 23 42 / 0.08);
+  --shadow-overlay: 0 8px 16px -4px rgb(15 23 42 / 0.1), 0 24px 48px -12px rgb(15 23 42 / 0.18);
+  --shadow-brand: 0 1px 2px rgb(37 99 235 / 0.2), 0 4px 12px -2px rgb(37 99 235 / 0.25);
 
   /* --- Radios ---------------------------------------------------------- */
-  --radius-card: 0.625rem;
   --radius-control: 0.5rem;
+  --radius-card: 0.75rem;
+  --radius-panel: 1rem;
+
+  /* --- Movimiento ------------------------------------------------------ */
+  --ease-suave: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-salida: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* --------------------------------------------------------------------------
@@ -84,22 +102,85 @@
     border-color: var(--color-muted-200);
   }
 
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
   body {
     background-color: var(--color-surface);
     color: var(--color-ink-700);
     font-family: var(--font-sans);
+    font-feature-settings: 'cv11', 'ss01';
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Cifras de dinero siempre alineadas en columna */
-  .tabular {
-    font-variant-numeric: tabular-nums;
+  /* Titulos: un poco mas apretados, que es lo que distingue una tipografia
+     cuidada de la de por defecto. */
+  h1, h2, h3, h4 {
+    letter-spacing: -0.02em;
+    color: var(--color-ink-900);
   }
 
-  /* Foco visible y consistente en todo el sistema (accesibilidad AA) */
+  /* Las cifras de dinero siempre alineadas en columna. */
+  .tabular {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+
   :focus-visible {
     outline: 2px solid var(--color-brand-600);
     outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background-color: var(--color-brand-100);
+    color: var(--color-brand-900);
+  }
+
+  /* Barras de desplazamiento discretas en los contenedores internos. */
+  .scroll-fino {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-muted-300) transparent;
+  }
+  .scroll-fino::-webkit-scrollbar { height: 8px; width: 8px; }
+  .scroll-fino::-webkit-scrollbar-track { background: transparent; }
+  .scroll-fino::-webkit-scrollbar-thumb {
+    background-color: var(--color-muted-300);
+    border-radius: 9999px;
+  }
+}
+
+@layer utilities {
+  /* Malla de luz para el panel de marca del inicio de sesion. */
+  .malla-marca {
+    background-color: var(--color-brand-950);
+    background-image:
+      radial-gradient(at 18% 22%, rgb(37 99 235 / 0.55) 0px, transparent 55%),
+      radial-gradient(at 82% 12%, rgb(30 58 138 / 0.65) 0px, transparent 50%),
+      radial-gradient(at 68% 88%, rgb(59 130 246 / 0.32) 0px, transparent 55%),
+      radial-gradient(at 8% 92%, rgb(23 37 84 / 0.9) 0px, transparent 50%);
+  }
+
+  /* Retícula sutil sobre el panel de marca. */
+  .reticula {
+    background-image:
+      linear-gradient(rgb(255 255 255 / 0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(255 255 255 / 0.045) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+
+  .transicion-suave {
+    transition-property: color, background-color, border-color, box-shadow, transform, opacity;
+    transition-duration: 160ms;
+    transition-timing-function: var(--ease-suave);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }
