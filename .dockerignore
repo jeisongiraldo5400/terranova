@@ -1,0 +1,23 @@
+**/node_modules
+**/dist
+**/.next
+**/.turbo
+**/coverage
+**/generated
+
+# Cache incremental de TypeScript.
+#
+# Si un .tsbuildinfo del equipo de desarrollo entra en la imagen, tsc cree
+# que la salida ya esta al dia y no emite nada: la compilacion "pasa" pero
+# dist queda incompleto, y el fallo aparece despues como un import que no
+# resuelve. Es el mismo problema que obliga a poner el tsbuildinfo dentro
+# de dist en los paquetes.
+**/*.tsbuildinfo
+
+.git
+infra/backups
+apps/api/contratos
+legacy
+*.log
+.env
+.env.local

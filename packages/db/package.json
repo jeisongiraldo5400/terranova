@@ -24,7 +24,8 @@
     "validate": "prisma validate",
     "format": "prisma format",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist generated .turbo *.tsbuildinfo"
+    "clean": "rm -rf dist generated .turbo *.tsbuildinfo",
+    "lint": "eslint . --max-warnings 0"
   },
   "dependencies": {
     "@prisma/client": "catalog:",
@@ -37,6 +38,8 @@
     "prisma": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:",
-    "dotenv": "^17.2.5"
+    "dotenv": "^17.2.5",
+    "eslint": "^10.13.0",
+    "typescript-eslint": "^8.72.0"
   }
 }

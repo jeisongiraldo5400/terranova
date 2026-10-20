@@ -1,6 +1,11 @@
 # ===========================================================================
-# TERRANOVA - entorno local completo
+# TERRANOVA
+# ---------------------------------------------------------------------------
+# Desarrollo diario (solo la base; la app corre con `pnpm dev`):
 #   docker compose -f infra/docker-compose.yml up -d
+#
+# Pila completa en contenedores:
+#   docker compose -f infra/docker-compose.yml --profile completo up -d --build
 # ===========================================================================
 
 name: terranova
@@ -38,26 +43,54 @@ services:
       timeout: 5s
       retries: 10
 
-  # Almacenamiento de los contratos PDF generados por la API.
-  minio:
-    image: minio/minio:latest
-    container_name: terranova-minio
+  # --- Aplicacion ---------------------------------------------------------
+  # Bajo el perfil `completo`, de modo que el desarrollo diario siga usando
+  # `pnpm dev` contra esta misma base sin levantar imagenes.
+  api:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    container_name: terranova-api
+    profiles: ['completo']
     restart: unless-stopped
-    command: server /data --console-address ":9001"
+    depends_on:
+      postgres:
+        condition: service_healthy
     environment:
-      MINIO_ROOT_USER: ${MINIO_USER:-terranova}
-      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD:-terranova_local}
-    ports:
-      - '9000:9000'
-      - '9001:9001'
+      NODE_ENV: production
+      TZ: UTC
+      API_PORT: 3101
+      DATABASE_URL: postgresql://${POSTGRES_USER:-terranova}:${POSTGRES_PASSWORD:-terranova_local}@postgres:5432/${POSTGRES_DB:-terranova}?schema=public&options=-c%20timezone%3DUTC
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3100}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+      CONTRATOS_DIR: /datos/contratos
     volumes:
-      - minio-data:/data
-    healthcheck:
-      test: ['CMD', 'mc', 'ready', 'local']
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - contratos:/datos/contratos
+    ports:
+      - '${API_PORT:-3101}:3101'
+
+  web:
+    build:
+      context: ..
+      dockerfile: apps/web/Dockerfile
+    container_name: terranova-web
+    profiles: ['completo']
+    restart: unless-stopped
+    depends_on:
+      - api
+    environment:
+      NODE_ENV: production
+      TZ: UTC
+      # Nombre del servicio, no localhost: la peticion sale del contenedor
+      # de la web hacia el de la API por la red interna de Docker.
+      API_URL: http://api:3101
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3100}
+    ports:
+      - '3100:3100'
 
 volumes:
   postgres-data:
-  minio-data:
+  # Los contratos PDF no viven en la base de datos: sin su propio volumen
+  # se perderian al recrear el contenedor.
+  contratos:

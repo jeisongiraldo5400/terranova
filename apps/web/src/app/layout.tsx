@@ -27,6 +27,9 @@ export const metadata: Metadata = {
     template: '%s · TERRANOVA',
   },
   description: 'Administración de proyectos, lotes, ventas, cartera y contratos',
+  icons: { icon: '/favicon.svg' },
+  // Sistema interno: no debe indexarse.
+  robots: { index: false, follow: false },
 };
 
 export const viewport: Viewport = {

@@ -29,9 +29,12 @@ describe('matriz de permisos', () => {
   });
 
   it('el menu lateral se deriva del rol', () => {
-    expect(modulosVisibles('ADMIN')).toHaveLength(9);
+    expect(modulosVisibles('ADMIN')).toHaveLength(10);
     expect(modulosVisibles('SECRETARIA')).not.toContain('configuracion');
     expect(modulosVisibles('EMPLEADO')).not.toContain('pagos');
     expect(modulosVisibles('EMPLEADO')).toContain('lotes');
+    // La auditoria es solo del administrador.
+    expect(modulosVisibles('SECRETARIA')).not.toContain('auditoria');
+    expect(modulosVisibles('ADMIN')).toContain('auditoria');
   });
 });

@@ -1,8 +1,7 @@
 import { api } from '@/lib/api';
 import { EncabezadoPagina } from '@/components/encabezado';
-import { Badge, Card, CardEncabezado, CeldaDoble, Fila, Indicador, Money, Tabla, Td, Th, TONO_CARTERA, Vacio, montoCompacto } from '@/components/ui';
+import { Badge, Card, CardEncabezado, Fila, Indicador, Money, Tabla, Td, Th, TONO_CARTERA, Vacio, montoCompacto } from '@/components/ui';
 import { IconoDinero, IconoMora, IconoPorCobrar, IconoRecaudo } from '@/components/iconos';
-import { fechaCorta } from '@/lib/formato';
 import { ETIQUETA_ESTADO_CARTERA, ETIQUETA_TIPO_DOCUMENTO } from '@terranova/shared';
 
 interface Detalle {

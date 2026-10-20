@@ -9,7 +9,7 @@
     "test": "vitest run",
     "test:e2e": "vitest run --config vitest.e2e.config.ts",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src --max-warnings 0",
+    "lint": "eslint . --max-warnings 0",
     "clean": "rm -rf dist .turbo *.tsbuildinfo"
   },
   "dependencies": {
@@ -44,6 +44,8 @@
     "vitest": "catalog:",
     "dotenv": "^17.2.5",
     "unplugin-swc": "^1.5.10",
-    "@swc/core": "^1.14.1"
+    "@swc/core": "^1.14.1",
+    "eslint": "^10.13.0",
+    "typescript-eslint": "^8.72.0"
   }
 }

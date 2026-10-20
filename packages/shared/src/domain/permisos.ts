@@ -96,6 +96,7 @@ export const PERMISO_POR_MODULO: Record<string, Permiso> = {
   pagos: Permiso.PAGO_VER,
   contratos: Permiso.CONTRATO_VER,
   reportes: Permiso.REPORTE_VER,
+  auditoria: Permiso.AUDITORIA_VER,
   configuracion: Permiso.CONFIG_VER,
 };
 

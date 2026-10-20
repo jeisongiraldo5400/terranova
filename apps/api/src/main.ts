@@ -53,7 +53,6 @@ async function arrancar(): Promise<void> {
 }
 
 arrancar().catch((error: unknown) => {
-  // eslint-disable-next-line no-console
   console.error('No se pudo arrancar la API:', error);
   process.exit(1);
 });

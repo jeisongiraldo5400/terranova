@@ -7,6 +7,9 @@ const config: NextConfig = {
   transpilePackages: ['@terranova/shared'],
   // typedRoutes dejo de ser experimental en Next 16.
   typedRoutes: true,
+  // Servidor autocontenido para la imagen de Docker: Next copia solo los
+  // modulos que realmente usa, en lugar de arrastrar node_modules entero.
+  output: 'standalone',
 };
 
 export default config;

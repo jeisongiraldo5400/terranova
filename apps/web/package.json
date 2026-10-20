@@ -6,7 +6,7 @@
     "dev": "next dev --port 3100",
     "build": "next build",
     "start": "next start --port 3100",
-    "lint": "next lint",
+    "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf .next .turbo *.tsbuildinfo"
   },
@@ -24,6 +24,9 @@
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
     "tailwindcss": "^4.1.18",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "eslint": "^10.13.0",
+    "typescript-eslint": "^8.72.0",
+    "eslint-config-next": "^16.4.2"
   }
 }

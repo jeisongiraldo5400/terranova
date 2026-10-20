@@ -7,7 +7,7 @@ import { ETIQUETA_ROL } from '@terranova/shared';
 import { api } from '@/lib/api';
 import type { UsuarioSesion } from '@/lib/tipos';
 import {
-  IconoCerrar, IconoClientes, IconoConfiguracion, IconoContratos, IconoLotes,
+  IconoAuditoria, IconoCerrar, IconoClientes, IconoConfiguracion, IconoContratos, IconoLotes,
   IconoMenu, IconoPagos, IconoProyectos, IconoReportes, IconoSalir, IconoTablero,
   IconoVentas, Logo,
 } from './iconos';
@@ -42,6 +42,7 @@ const GRUPOS = [
     titulo: 'Sistema',
     modulos: [
       { clave: 'reportes', href: '/reportes', etiqueta: 'Reportes', Icono: IconoReportes },
+      { clave: 'auditoria', href: '/auditoria', etiqueta: 'Auditoría', Icono: IconoAuditoria },
       { clave: 'configuracion', href: '/configuracion', etiqueta: 'Configuración', Icono: IconoConfiguracion },
     ],
   },

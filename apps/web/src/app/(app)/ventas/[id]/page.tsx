@@ -11,7 +11,7 @@ import {
 } from '@/components/ui';
 import { IconoDinero, IconoMora, IconoPorCobrar, IconoRecaudo } from '@/components/iconos';
 import { area, fechaCorta, fechaLarga } from '@/lib/formato';
-import { AccionesVenta } from './acciones';
+import { AccionesVenta, BotonAnularPago } from './acciones';
 
 export default async function DetalleVenta({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -19,6 +19,8 @@ export default async function DetalleVenta({ params }: { params: Promise<{ id: s
 
   const puedePagar = tienePermiso(usuario.rol, Permiso.PAGO_CREAR);
   const puedeContrato = tienePermiso(usuario.rol, Permiso.CONTRATO_GENERAR);
+  const puedeAnularVenta = tienePermiso(usuario.rol, Permiso.VENTA_ANULAR);
+  const puedeAnularPago = tienePermiso(usuario.rol, Permiso.PAGO_ANULAR);
   const verPagos = tienePermiso(usuario.rol, Permiso.PAGO_VER);
   const anulada = v.estado === 'ANULADA';
 
@@ -173,8 +175,11 @@ export default async function DetalleVenta({ params }: { params: Promise<{ id: s
                   <AccionesVenta
                     ventaId={v.id}
                     saldo={v.cuenta.saldo}
+                    estadoVenta={v.estado}
+                    pagosVigentes={v.pagos.filter((p: any) => !p.anulado).length}
                     puedePagar={puedePagar && !anulada}
                     puedeContrato={puedeContrato && !anulada}
+                    puedeAnular={puedeAnularVenta}
                     contratos={v.contratos}
                   />
                 }
@@ -194,6 +199,7 @@ export default async function DetalleVenta({ params }: { params: Promise<{ id: s
                       <Th>Referencia</Th>
                       <Th alinear="right">Monto</Th>
                       <Th alinear="center">Estado</Th>
+                      {puedeAnularPago && <Th alinear="right">Acciones</Th>}
                     </tr>
                   </thead>
                   <tbody>
@@ -225,6 +231,13 @@ export default async function DetalleVenta({ params }: { params: Promise<{ id: s
                             <Badge tono="exito" punto>Vigente</Badge>
                           )}
                         </Td>
+                        {puedeAnularPago && (
+                          <Td alinear="right">
+                            {!p.anulado && !anulada && (
+                              <BotonAnularPago pagoId={p.id} monto={p.monto} />
+                            )}
+                          </Td>
+                        )}
                       </Fila>
                     ))}
                   </tbody>

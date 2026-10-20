@@ -1,7 +1,10 @@
 import Link from 'next/link';
-import { ETIQUETA_ESTADO_CARTERA, ETIQUETA_ESTADO_VENTA } from '@terranova/shared';
+import { ETIQUETA_ESTADO_CARTERA, ETIQUETA_ESTADO_VENTA, Permiso, tienePermiso } from '@terranova/shared';
 import { api } from '@/lib/api';
-import type { Pagina, ProyectoResumen, VentaCuenta } from '@/lib/tipos';
+import type { Cliente, Lote, Pagina, ProyectoResumen, VentaCuenta } from '@/lib/tipos';
+import { exigirSesion } from '@/lib/sesion';
+import { Paginacion } from '@/components/paginacion';
+import { BotonRegistrarVenta } from './registrar';
 import { EncabezadoPagina } from '@/components/encabezado';
 import {
   Badge, Card, CeldaDoble, Fila, Money, Progreso, TONO_CARTERA, TONO_ESTADO_VENTA,
@@ -15,22 +18,42 @@ export default async function PaginaVentas({
 }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const q = await searchParams;
 
-  const [proyectos, ventas] = await Promise.all([
+  const [usuario, proyectos, ventas] = await Promise.all([
+    exigirSesion(),
     api.get<ProyectoResumen[]>('/proyectos'),
     api.get<Pagina<VentaCuenta>>('/ventas', {
       proyectoId: q.proyectoId,
       estadoCartera: q.estadoCartera,
       buscar: q.buscar,
       pagina: q.pagina ?? 1,
-      porPagina: 50,
+      porPagina: 25,
     }),
   ]);
+
+  const puedeVender = tienePermiso(usuario.rol, Permiso.VENTA_CREAR);
+
+  // El formulario necesita el inventario disponible y los clientes activos.
+  // Solo se piden si el rol puede vender.
+  const [lotesDisponibles, clientesActivos] = puedeVender
+    ? await Promise.all([
+        api.get<Pagina<Lote>>('/lotes', { estado: 'DISPONIBLE', porPagina: 200 }),
+        api.get<Pagina<Cliente>>('/clientes', { activo: true, porPagina: 200 }),
+      ])
+    : [null, null];
 
   return (
     <>
       <EncabezadoPagina
         titulo="Ventas"
         descripcion={`${ventas.total} venta(s). El saldo se calcula a partir de los pagos vigentes; nunca se almacena.`}
+        acciones={
+          puedeVender && lotesDisponibles && clientesActivos ? (
+            <BotonRegistrarVenta
+              lotes={lotesDisponibles.datos}
+              clientes={clientesActivos.datos}
+            />
+          ) : undefined
+        }
       />
 
       <Card>
@@ -122,6 +145,13 @@ export default async function PaginaVentas({
             </tbody>
           </Tabla>
         )}
+
+        <Paginacion
+          pagina={ventas.pagina}
+          totalPaginas={ventas.totalPaginas}
+          total={ventas.total}
+          ruta="/ventas"
+        />
       </Card>
     </>
   );

@@ -1,26 +1,35 @@
 import Link from 'next/link';
+import { Permiso, tienePermiso } from '@terranova/shared';
 import { api } from '@/lib/api';
+import { exigirSesion } from '@/lib/sesion';
 import type { Cliente, Pagina } from '@/lib/tipos';
 import { EncabezadoPagina } from '@/components/encabezado';
 import { Badge, Card, Fila, Tabla, Td, Th, Vacio } from '@/components/ui';
-import { IconoFlecha } from '@/components/iconos';
 import { BuscadorClientes } from './buscador';
+import { AccionesCliente, BotonNuevoCliente } from './acciones';
+import { Paginacion } from '@/components/paginacion';
 
 export default async function PaginaClientes({
   searchParams,
 }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const q = await searchParams;
-  const clientes = await api.get<Pagina<Cliente>>('/clientes', {
-    buscar: q.buscar,
-    pagina: q.pagina ?? 1,
-    porPagina: 50,
-  });
+  const [usuario, clientes] = await Promise.all([
+    exigirSesion(),
+    api.get<Pagina<Cliente>>('/clientes', {
+      buscar: q.buscar,
+      pagina: q.pagina ?? 1,
+      porPagina: 25,
+    }),
+  ]);
+
+  const puedeGestionar = tienePermiso(usuario.rol, Permiso.CLIENTE_GESTIONAR);
 
   return (
     <>
       <EncabezadoPagina
         titulo="Clientes"
         descripcion={`${clientes.total} cliente(s). Un mismo comprador es un solo registro, compre en el proyecto que compre.`}
+        acciones={puedeGestionar ? <BotonNuevoCliente /> : undefined}
       />
 
       <Card>
@@ -43,7 +52,7 @@ export default async function PaginaClientes({
                 <Th>Ciudad</Th>
                 <Th alinear="center">Compras</Th>
                 <Th alinear="center">Estado</Th>
-                <Th />
+                <Th alinear="right">Acciones</Th>
               </tr>
             </thead>
             <tbody>
@@ -73,19 +82,23 @@ export default async function PaginaClientes({
                     </Badge>
                   </Td>
                   <Td alinear="right">
-                    <Link
-                      href={`/clientes/${c.id}`}
-                      className="transicion-suave inline-flex size-8 items-center justify-center rounded-[--radius-control] text-muted-400 hover:bg-brand-50 hover:text-brand-700"
-                      aria-label={`Ver ficha de ${c.nombre}`}
-                    >
-                      <IconoFlecha className="size-4" />
-                    </Link>
+                    <div className="flex items-center justify-end gap-1">
+                      <Link
+                        href={`/clientes/${c.id}`}
+                        className="transicion-suave rounded-[--radius-control] px-2.5 py-1.5 text-xs font-medium text-brand-700 hover:bg-brand-50"
+                      >
+                        Ver ficha
+                      </Link>
+                      {puedeGestionar && <AccionesCliente cliente={c} />}
+                    </div>
                   </Td>
                 </Fila>
               ))}
             </tbody>
           </Tabla>
         )}
+
+        <Paginacion pagina={clientes.pagina} totalPaginas={clientes.totalPaginas} total={clientes.total} ruta="/clientes" />
       </Card>
     </>
   );

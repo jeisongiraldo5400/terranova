@@ -7,6 +7,14 @@
     "./typescript/library": "./typescript/library.json",
     "./typescript/nest": "./typescript/nest.json",
     "./typescript/next": "./typescript/next.json",
-    "./tailwind/tokens.css": "./tailwind/tokens.css"
+    "./tailwind/tokens.css": "./tailwind/tokens.css",
+    "./eslint/base": "./eslint/base.mjs",
+    "./eslint/nest": "./eslint/nest.mjs",
+    "./eslint/next": "./eslint/next.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.13.0",
+    "typescript-eslint": "^8.72.0"
   }
 }

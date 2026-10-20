@@ -11,6 +11,26 @@
 4. **Respaldos.** Programe `infra/scripts/backup.sh` antes del primer día de
    uso, no después.
 
+## Despliegue en contenedores
+
+```bash
+pnpm up:completo     # construye las imágenes y levanta todo
+pnpm ps              # estado
+pnpm logs            # seguimiento
+```
+
+Tres detalles que conviene conocer:
+
+- **El `--env-file` no es opcional.** Compose busca el `.env` junto al
+  archivo de compose (`infra/`), no en la raíz del proyecto. Los scripts de
+  `package.json` ya lo pasan; si invoca `docker compose` a mano, inclúyalo o
+  la API arrancará con los secretos JWT en blanco.
+- **Los contratos viven en un volumen propio** (`contratos`), porque no
+  están en la base de datos: sin él se perderían al recrear el contenedor.
+- **Los contenedores corren en UTC** y con un usuario sin privilegios. La
+  zona horaria es deliberada: las fechas de negocio son días UTC de punta a
+  punta.
+
 ## Respaldos
 
 ```bash

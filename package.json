@@ -4,7 +4,9 @@
   "private": true,
   "description": "Sistema de Administracion de Lotes - monorepo",
   "packageManager": "pnpm@12.9.1",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
@@ -18,11 +20,13 @@
     "db:seed": "pnpm --filter @terranova/db run seed",
     "db:studio": "pnpm --filter @terranova/db run studio",
     "db:reset": "pnpm --filter @terranova/db run reset",
-    "up": "docker compose -f infra/docker-compose.yml up -d",
-    "down": "docker compose -f infra/docker-compose.yml down",
-    "logs": "docker compose -f infra/docker-compose.yml logs -f",
+    "up": "docker compose -f infra/docker-compose.yml --env-file .env up -d",
+    "down": "docker compose -f infra/docker-compose.yml --env-file .env down",
+    "logs": "docker compose -f infra/docker-compose.yml --env-file .env logs -f",
     "migrar:legacy": "pnpm --filter @terranova/migracion-localstorage run start",
-    "verificar:rutas": "bash infra/scripts/verificar-rutas.sh"
+    "verificar:rutas": "bash infra/scripts/verificar-rutas.sh",
+    "up:completo": "docker compose -f infra/docker-compose.yml --env-file .env --profile completo up -d --build",
+    "ps": "docker compose -f infra/docker-compose.yml --env-file .env ps"
   },
   "devDependencies": {
     "turbo": "^2.5.8",

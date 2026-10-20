@@ -1,10 +1,12 @@
 import { api } from '@/lib/api';
+import type { UsuarioSistema } from '@/lib/tipos';
 import { exigirSesion } from '@/lib/sesion';
 import { EncabezadoPagina } from '@/components/encabezado';
 import { Aviso, Badge, Card, CardEncabezado, Fila, Tabla, Td, Th, Vacio } from '@/components/ui';
 import { fechaCorta } from '@/lib/formato';
 import { ETIQUETA_ROL, Permiso, tienePermiso } from '@terranova/shared';
 import { FormularioEmpresa } from './formulario-empresa';
+import { AccionesUsuario, BotonNuevoUsuario } from './usuarios';
 
 interface Empresa {
   razonSocial: string; nit: string; direccion: string; ciudad: string;
@@ -12,10 +14,7 @@ interface Empresa {
   documentoRepresentante: string; clausulasContrato: string | null;
 }
 
-interface Usuario {
-  id: string; email: string; nombre: string; rol: 'ADMIN' | 'SECRETARIA' | 'EMPLEADO';
-  activo: boolean; ultimoAcceso: string | null;
-}
+
 
 export default async function PaginaConfiguracion() {
   const usuario = await exigirSesion();
@@ -24,7 +23,7 @@ export default async function PaginaConfiguracion() {
 
   const [empresa, usuarios] = await Promise.all([
     api.get<Empresa | null>('/configuracion/empresa'),
-    puedeUsuarios ? api.get<Usuario[]>('/configuracion/usuarios') : Promise.resolve([]),
+    puedeUsuarios ? api.get<UsuarioSistema[]>('/configuracion/usuarios') : Promise.resolve([]),
   ]);
 
   return (
@@ -56,7 +55,8 @@ export default async function PaginaConfiguracion() {
           <Card>
             <CardEncabezado
               titulo="Usuarios"
-              descripcion="Los permisos se derivan del rol; se aplican en la API, no solo en la interfaz"
+              descripcion="Los permisos se derivan del rol y se aplican en la API, no solo en la interfaz"
+              accion={<BotonNuevoUsuario />}
             />
             {usuarios.length === 0 ? (
               <Vacio titulo="Sin usuarios" />
@@ -69,6 +69,7 @@ export default async function PaginaConfiguracion() {
                     <Th>Rol</Th>
                     <Th>Último acceso</Th>
                     <Th alinear="center">Estado</Th>
+                    <Th alinear="right">Acciones</Th>
                   </tr>
                 </thead>
                 <tbody>
@@ -88,6 +89,9 @@ export default async function PaginaConfiguracion() {
                         <Badge tono={u.activo ? 'exito' : 'neutro'} punto>
                           {u.activo ? 'Activo' : 'Inactivo'}
                         </Badge>
+                      </Td>
+                      <Td alinear="right">
+                        <AccionesUsuario usuario={u} esUsuarioActual={u.id === usuario.id} />
                       </Td>
                     </Fila>
                   ))}

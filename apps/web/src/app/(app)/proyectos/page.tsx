@@ -1,19 +1,37 @@
 import Link from 'next/link';
+import { Permiso, tienePermiso } from '@terranova/shared';
 import { api } from '@/lib/api';
-import type { ProyectoResumen } from '@/lib/tipos';
+import { exigirSesion } from '@/lib/sesion';
+import type { Proyecto, ProyectoResumen } from '@/lib/tipos';
+import { AccionesProyecto, BotonNuevoProyecto } from './acciones';
 import { EncabezadoPagina } from '@/components/encabezado';
 import { Badge, Card, Money, Progreso, Vacio } from '@/components/ui';
 import { IconoFlecha } from '@/components/iconos';
 import { area } from '@/lib/formato';
 
 export default async function PaginaProyectos() {
-  const proyectos = await api.get<ProyectoResumen[]>('/proyectos');
+  const [usuario, proyectos] = await Promise.all([
+    exigirSesion(),
+    api.get<ProyectoResumen[]>('/proyectos'),
+  ]);
+
+  const puedeGestionar = tienePermiso(usuario.rol, Permiso.PROYECTO_GESTIONAR);
+
+  // El detalle trae las etapas, que necesitan los formularios de edición.
+  const detalles: Record<string, Proyecto> = {};
+  if (puedeGestionar) {
+    const datos = await Promise.all(
+      proyectos.map((p) => api.get<Proyecto>(`/proyectos/${p.proyecto_id}`)),
+    );
+    for (const d of datos) detalles[d.id] = d;
+  }
 
   return (
     <>
       <EncabezadoPagina
         titulo="Proyectos"
         descripcion="Inventario y cartera de cada urbanización."
+        acciones={puedeGestionar ? <BotonNuevoProyecto /> : undefined}
       />
 
       {proyectos.length === 0 ? (
@@ -21,6 +39,7 @@ export default async function PaginaProyectos() {
           <Vacio
             titulo="Todavía no hay proyectos"
             descripcion="Cree el primer proyecto para empezar a cargar lotes."
+            accion={puedeGestionar ? <BotonNuevoProyecto /> : undefined}
           />
         </Card>
       ) : (
@@ -104,6 +123,10 @@ export default async function PaginaProyectos() {
                   Ver lotes del proyecto
                   <IconoFlecha className="size-4" />
                 </Link>
+
+                {puedeGestionar && detalles[p.proyecto_id] && (
+                  <AccionesProyecto resumen={p} detalle={detalles[p.proyecto_id]!} />
+                )}
               </Card>
             );
           })}

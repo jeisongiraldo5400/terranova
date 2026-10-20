@@ -1,4 +1,6 @@
-import type { EstadoLote, EstadoVenta, Permiso, Rol, TipoPago, MetodoPago } from '@terranova/shared';
+import type {
+  EstadoLote, EstadoProyecto, EstadoVenta, MetodoPago, Permiso, Rol, TipoDocumento, TipoPago,
+} from '@terranova/shared';
 
 export interface UsuarioSesion {
   id: string;
@@ -61,15 +63,49 @@ export interface Lote {
 
 export interface Cliente {
   id: string;
-  tipoDocumento: string;
+  tipoDocumento: TipoDocumento;
   documento: string;
   nombre: string;
   telefono: string;
   email: string | null;
   direccion: string | null;
   ciudad: string | null;
+  observaciones: string | null;
   activo: boolean;
   _count?: { ventas: number };
+}
+
+export interface Proyecto {
+  id: string;
+  codigo: string;
+  nombre: string;
+  ubicacion: string | null;
+  estado: EstadoProyecto;
+  areaMinimaM2: string;
+  observaciones: string | null;
+  etapas: Array<{ id: string; numero: number; nombre: string; _count?: { lotes: number } }>;
+}
+
+export interface UsuarioSistema {
+  id: string;
+  email: string;
+  nombre: string;
+  rol: Rol;
+  activo: boolean;
+  ultimoAcceso: string | null;
+  creadoEn: string;
+}
+
+export interface RegistroAuditoria {
+  id: string;
+  accion: string;
+  entidad: string;
+  entidadId: string | null;
+  antes: unknown;
+  despues: unknown;
+  ip: string | null;
+  creadoEn: string;
+  usuario: { nombre: string; email: string; rol: Rol } | null;
 }
 
 export type EstadoCartera = 'PENDIENTE' | 'PARCIAL' | 'PAGADO' | 'EN_MORA' | 'ANULADA';

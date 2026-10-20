@@ -9,7 +9,7 @@ import { Boton } from './controles';
  * no dan contexto de lo que se esta por hacer.
  */
 export function Dialogo({
-  abierto, onCerrar, titulo, descripcion, children, pie,
+  abierto, onCerrar, titulo, descripcion, children, pie, ancho = 'md',
 }: {
   abierto: boolean;
   onCerrar: () => void;
@@ -17,6 +17,7 @@ export function Dialogo({
   descripcion?: string;
   children?: ReactNode;
   pie?: ReactNode;
+  ancho?: 'md' | 'lg';
 }) {
   const ref = useRef<HTMLDialogElement>(null);
 
@@ -35,16 +36,18 @@ export function Dialogo({
         // Cerrar al pulsar fuera del panel.
         if (e.target === ref.current) onCerrar();
       }}
-      className="m-auto w-[min(32rem,calc(100vw-2rem))] rounded-[--radius-card] p-0 shadow-[--shadow-overlay] backdrop:bg-ink-900/40"
+      className={`m-auto ${
+        ancho === 'lg' ? 'w-[min(46rem,calc(100vw-2rem))]' : 'w-[min(32rem,calc(100vw-2rem))]'
+      } rounded-[--radius-card] p-0 shadow-[--shadow-overlay] backdrop:bg-ink-950/50 backdrop:backdrop-blur-sm`}
       aria-labelledby="titulo-dialogo"
     >
       <div className="border-b border-muted-200 px-5 py-4">
-        <h2 id="titulo-dialogo" className="text-base font-semibold text-ink-900">
+        <h2 id="titulo-dialogo" className="text-base font-semibold tracking-tight text-ink-900">
           {titulo}
         </h2>
         {descripcion && <p className="mt-1 text-sm text-muted-600">{descripcion}</p>}
       </div>
-      {children && <div className="px-5 py-4">{children}</div>}
+      {children && <div className="scroll-fino max-h-[70vh] overflow-y-auto px-5 py-4">{children}</div>}
       {pie && (
         <div className="flex justify-end gap-2 border-t border-muted-200 bg-muted-100 px-5 py-3">
           {pie}

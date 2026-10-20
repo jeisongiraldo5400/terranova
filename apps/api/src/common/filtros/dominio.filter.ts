@@ -86,34 +86,70 @@ export class DominioExceptionFilter implements ExceptionFilter {
     });
   }
 
+  /**
+   * Mensajes de conflicto redactados para quien los va a leer.
+   *
+   * Prisma identifica el indice violado por sus NOMBRES DE COLUMNA
+   * (`target: ["proyecto_id", "codigo"]`), no por el nombre del constraint.
+   * Mapear por nombre de constraint parecia funcionar pero nunca acertaba:
+   * todos los conflictos caian en el mensaje generico.
+   */
+  private static readonly MENSAJES_UNICOS: Record<string, string> = {
+    'Lote:codigo,proyecto_id':
+      'Ya existe un lote con ese código en el proyecto.',
+    'Cliente:documento':
+      'Ya existe un cliente registrado con ese documento.',
+    'Proyecto:codigo':
+      'Ya existe un proyecto con ese código.',
+    'Usuario:email':
+      'Ya existe un usuario con ese correo.',
+    'Etapa:numero,proyecto_id':
+      'El proyecto ya tiene una etapa con ese número.',
+    'Contrato:numero,version':
+      'Ya existe esa versión del contrato.',
+    'Contrato:venta_id,version':
+      'Ya existe esa versión del contrato para la venta.',
+    'Venta:numero':
+      'Conflicto al asignar el número de venta. Intente de nuevo.',
+  };
+
+  /**
+   * El indice unico parcial que impide la doble venta se crea por SQL
+   * crudo, fuera del esquema de Prisma, de modo que su violacion llega
+   * identificada por el nombre del indice y no por columnas.
+   */
+  private static readonly MENSAJES_POR_INDICE: Record<string, string> = {
+    uniq_venta_vigente_por_lote:
+      'Este lote ya tiene una venta vigente. Anule la venta anterior antes de volver a venderlo.',
+  };
+
   private traducirPrisma(
     e: Prisma.PrismaClientKnownRequestError,
   ): { estado: HttpStatus; mensaje: string } | null {
-    const destino = Array.isArray(e.meta?.target)
-      ? (e.meta.target as string[]).join(', ')
-      : String(e.meta?.target ?? '');
-
     switch (e.code) {
       case 'P2002': {
-        // Indice unico. Los mensajes se nombran por el constraint para que
-        // el usuario lea algo accionable.
-        const porConstraint: Record<string, string> = {
-          uniq_venta_vigente_por_lote:
-            'Este lote ya tiene una venta vigente. Anule la venta anterior antes de volver a venderlo.',
-          clientes_documento_key: 'Ya existe un cliente registrado con ese documento.',
-          lotes_proyecto_id_codigo_key: 'Ya existe un lote con ese codigo en el proyecto.',
-          proyectos_codigo_key: 'Ya existe un proyecto con ese codigo.',
-          usuarios_email_key: 'Ya existe un usuario con ese correo.',
-          ventas_numero_key: 'Conflicto al asignar el numero de venta. Intente de nuevo.',
-          contratos_numero_version_key:
-            'Ya existe esa version del contrato. Intente regenerar de nuevo.',
-          contratos_venta_id_version_key:
-            'Ya existe esa version del contrato para la venta.',
-        };
+        const destino = e.meta?.target;
+        const modelo = String(e.meta?.modelName ?? '');
+
+        if (Array.isArray(destino)) {
+          const clave = `${modelo}:${[...(destino as string[])].sort().join(',')}`;
+          const mensaje = DominioExceptionFilter.MENSAJES_UNICOS[clave];
+          if (mensaje) return { estado: HttpStatus.CONFLICT, mensaje };
+        }
+
+        // Indices creados por SQL crudo: el destino llega como texto.
+        const comoTexto = String(destino ?? '');
+        for (const [indice, mensaje] of Object.entries(
+          DominioExceptionFilter.MENSAJES_POR_INDICE,
+        )) {
+          if (comoTexto.includes(indice) || e.message.includes(indice)) {
+            return { estado: HttpStatus.CONFLICT, mensaje };
+          }
+        }
+
         return {
           estado: HttpStatus.CONFLICT,
-          mensaje:
-            porConstraint[destino] ?? `Ya existe un registro con el mismo valor en: ${destino}.`,
+          mensaje: 'Ya existe un registro con esos datos.',
         };
       }
       case 'P2003':

@@ -142,6 +142,8 @@ describe('registrar venta', () => {
       .send(ventaBase(escenario.lotes[0]!.id, escenario.otroCliente.id));
 
     expect(segunda.status).toBeGreaterThanOrEqual(400);
+    // El mensaje debe ser accionable, no un volcado del motor.
+    expect(segunda.body.mensaje).toMatch(/venta vigente|no esta disponible/i);
     expect(await prisma.venta.count({ where: { loteId: escenario.lotes[0]!.id } })).toBe(1);
   });
 

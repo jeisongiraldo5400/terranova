@@ -103,6 +103,14 @@ export const IconoConfiguracion = (p: Props) => (
   </Base>
 );
 
+export const IconoAuditoria = (p: Props) => (
+  <Base {...p}>
+    <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+    <path d="M14 3v5h5" />
+    <path d="m9 14 1.8 1.8L14.5 12" />
+  </Base>
+);
+
 /* --- Indicadores --------------------------------------------------------- */
 
 export const IconoDinero = (p: Props) => (

@@ -7,6 +7,9 @@
     "rootDir": "src",
     "types": ["node"],
     "noUncheckedIndexedAccess": false,
+    // Dentro de dist: asi se borra junto con la salida y no puede
+    // quedar un cache que haga creer a tsc que ya compilo.
+    "tsBuildInfoFile": "dist/.tsbuildinfo",
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true
