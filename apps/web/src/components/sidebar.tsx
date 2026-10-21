@@ -95,8 +95,11 @@ export function Sidebar({ usuario }: { usuario: UsuarioSesion }) {
         />
       )}
 
+      {/* En escritorio queda fijo a la altura de la pantalla: con lg:static se
+          estiraba hasta el alto de la pagina y "Cerrar sesion" acababa debajo
+          de todo el contenido. Si los modulos no caben, desplaza solo el nav. */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 shrink-0 flex-col bg-brand-950 transition-transform duration-200 lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 shrink-0 flex-col bg-brand-950 transition-transform duration-200 lg:sticky lg:top-0 lg:h-dvh lg:self-start lg:translate-x-0 ${
           abierto ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
