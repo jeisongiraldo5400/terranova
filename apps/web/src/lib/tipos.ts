@@ -156,6 +156,7 @@ export interface Pago {
 
 export interface Contrato {
   id: string;
+  ventaId: string;
   numero: string;
   version: number;
   sha256: string;

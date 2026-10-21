@@ -5,6 +5,7 @@ import type { Cliente, Lote, Pagina, ProyectoResumen, VentaCuenta } from '@/lib/
 import { exigirSesion } from '@/lib/sesion';
 import { Paginacion } from '@/components/paginacion';
 import { BotonRegistrarVenta } from './registrar';
+import { AccionesFilaVenta } from './acciones-fila';
 import { EncabezadoPagina } from '@/components/encabezado';
 import {
   Badge, Card, CeldaDoble, Fila, Money, Progreso, TONO_CARTERA, TONO_ESTADO_VENTA,
@@ -31,6 +32,9 @@ export default async function PaginaVentas({
   ]);
 
   const puedeVender = tienePermiso(usuario.rol, Permiso.VENTA_CREAR);
+  const puedePagar = tienePermiso(usuario.rol, Permiso.PAGO_CREAR);
+  const puedeContrato = tienePermiso(usuario.rol, Permiso.CONTRATO_GENERAR);
+  const conAcciones = puedePagar || puedeContrato;
 
   // El formulario necesita el inventario disponible y los clientes activos.
   // Solo se piden si el rol puede vender.
@@ -78,6 +82,7 @@ export default async function PaginaVentas({
                 <Th alinear="right">Pagado</Th>
                 <Th alinear="right">Saldo</Th>
                 <Th alinear="center">Cartera</Th>
+                {conAcciones && <Th />}
               </tr>
             </thead>
             <tbody>
@@ -140,6 +145,18 @@ export default async function PaginaVentas({
                       </>
                     )}
                   </Td>
+                  {conAcciones && (
+                    <Td alinear="right">
+                      {v.estado_venta !== 'ANULADA' && (
+                        <AccionesFilaVenta
+                          ventaId={v.venta_id}
+                          saldo={v.saldo}
+                          puedePagar={puedePagar}
+                          puedeContrato={puedeContrato}
+                        />
+                      )}
+                    </Td>
+                  )}
                 </Fila>
               ))}
             </tbody>

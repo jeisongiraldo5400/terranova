@@ -26,3 +26,18 @@ export const area = (m2: string | number): string =>
 
 export const porcentaje = (v: string | number): string =>
   `${new Intl.NumberFormat('es-CO', { maximumFractionDigits: 1 }).format(Number(v))}%`;
+
+/** Una venta tal como se ofrece en un selector: "#12 · MZ-A01 · Ana Ruiz". */
+export interface OpcionVenta {
+  id: string;
+  etiqueta: string;
+  saldo: string;
+}
+
+export const opcionVenta = (v: {
+  venta_id: string; venta_numero: number; lote_codigo: string; cliente_nombre: string; saldo: string;
+}): OpcionVenta => ({
+  id: v.venta_id,
+  etiqueta: `#${v.venta_numero} · ${v.lote_codigo} · ${v.cliente_nombre}`,
+  saldo: v.saldo,
+});

@@ -2,18 +2,15 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import {
-  ETIQUETA_METODO_PAGO, ETIQUETA_TIPO_PAGO, MetodoPago, TipoPago,
-  anularPagoSchema, anularVentaSchema, formatearCOP, registrarPagoSchema,
-} from '@terranova/shared';
-import { api, ErrorApi } from '@/lib/api';
+import { anularPagoSchema, anularVentaSchema, formatearCOP } from '@terranova/shared';
+import { api } from '@/lib/api';
+import { useGenerarContrato } from '@/lib/contratos';
 import { datosDelFormulario, useFormulario } from '@/lib/formulario';
-import { AreaTexto, Boton, Campo, Entrada, EntradaDinero, Seleccion } from '@/components/controles';
-import { FormularioDialogo, Rejilla } from '@/components/formulario';
+import { AreaTexto, Boton, Campo } from '@/components/controles';
+import { FormularioDialogo } from '@/components/formulario';
+import { FormularioPago } from '@/components/formulario-pago';
 import { Aviso } from '@/components/ui';
 import { IconoContratos, IconoMas } from '@/components/iconos';
-
-const hoy = () => new Date().toISOString().slice(0, 10);
 
 /* ==========================================================================
    Acciones sobre una venta
@@ -32,30 +29,12 @@ export function AccionesVenta({
   pagosVigentes: number;
   contratos: Array<{ id: string; numero: string; version: number }>;
 }) {
-  const router = useRouter();
   const [dialogo, setDialogo] = useState<'pago' | 'anular' | null>(null);
-  const [generando, setGenerando] = useState(false);
-  const [errorContrato, setErrorContrato] = useState<string | null>(null);
+  const { generar, generando, error: errorContrato } = useGenerarContrato();
 
   const contratoVigente = contratos[0];
   const sinSaldo = Number(saldo) <= 0;
   const anulada = estadoVenta === 'ANULADA';
-
-  async function generarContrato() {
-    setGenerando(true);
-    setErrorContrato(null);
-    try {
-      const c = await api.post<{ id: string }>('/contratos', { ventaId, regenerar: false });
-      window.open(`/api/contratos/${c.id}/pdf`, '_blank');
-      router.refresh();
-    } catch (e) {
-      setErrorContrato(
-        e instanceof ErrorApi ? e.message : 'No se pudo generar el contrato.',
-      );
-    } finally {
-      setGenerando(false);
-    }
-  }
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -65,17 +44,35 @@ export function AccionesVenta({
 
       {puedeContrato &&
         (contratoVigente ? (
-          <a
-            href={`/api/contratos/${contratoVigente.id}/pdf`}
-            target="_blank"
-            rel="noreferrer"
-            className="transicion-suave inline-flex h-8 items-center gap-1.5 rounded-[--radius-control] bg-white px-3 text-xs font-medium text-ink-700 shadow-[--shadow-card] ring-1 ring-inset ring-muted-200 hover:bg-muted-50"
-          >
-            <IconoContratos className="size-3.5" />
-            {contratoVigente.numero} v{contratoVigente.version}
-          </a>
+          <>
+            <a
+              href={`/api/contratos/${contratoVigente.id}/pdf`}
+              target="_blank"
+              rel="noreferrer"
+              className="transicion-suave inline-flex h-8 items-center gap-1.5 rounded-[--radius-control] bg-white px-3 text-xs font-medium text-ink-700 shadow-[--shadow-card] ring-1 ring-inset ring-muted-200 hover:bg-muted-50"
+            >
+              <IconoContratos className="size-3.5" />
+              {contratoVigente.numero} v{contratoVigente.version}
+            </a>
+            {/* Version nueva con los datos actuales; la anterior se conserva.
+                Tambien rescata un PDF que se perdio del disco del servidor. */}
+            <Boton
+              variante="fantasma"
+              tamano="sm"
+              onClick={() => void generar(ventaId, true)}
+              cargando={generando}
+              title="Emite una versión nueva con los datos actuales. La anterior se conserva."
+            >
+              Regenerar
+            </Boton>
+          </>
         ) : (
-          <Boton variante="secundario" tamano="sm" onClick={generarContrato} cargando={generando}>
+          <Boton
+            variante="secundario"
+            tamano="sm"
+            onClick={() => void generar(ventaId)}
+            cargando={generando}
+          >
             Generar contrato
           </Boton>
         ))}
@@ -113,79 +110,6 @@ export function AccionesVenta({
         />
       )}
     </div>
-  );
-}
-
-/* --- Registrar abono ------------------------------------------------------ */
-
-function FormularioPago({
-  ventaId, saldo, onCerrar,
-}: { ventaId: string; saldo: string; onCerrar: () => void }) {
-  const { enviando, errorGeneral, errores, procesar } = useFormulario({
-    schema: registrarPagoSchema,
-    enviar: (datos) => api.post('/pagos', datos),
-    alTerminar: onCerrar,
-  });
-
-  return (
-    <FormularioDialogo
-      abierto
-      onCerrar={onCerrar}
-      titulo="Registrar abono"
-      descripcion={`Saldo pendiente: ${formatearCOP(saldo)}`}
-      onEnviar={(e) => {
-        e.preventDefault();
-        void procesar({ ...datosDelFormulario(e.currentTarget), ventaId });
-      }}
-      enviando={enviando}
-      errorGeneral={errorGeneral}
-      textoEnviar="Registrar abono"
-    >
-      <Rejilla>
-        <Campo etiqueta="Monto" error={errores.monto} requerido>
-          <EntradaDinero name="monto" required error={Boolean(errores.monto)} autoFocus />
-        </Campo>
-
-        <Campo etiqueta="Fecha" error={errores.fecha} requerido>
-          <Entrada
-            name="fecha"
-            type="date"
-            defaultValue={hoy()}
-            max={hoy()}
-            required
-            error={Boolean(errores.fecha)}
-          />
-        </Campo>
-
-        <Campo etiqueta="Tipo" error={errores.tipo} requerido>
-          <Seleccion name="tipo" defaultValue={TipoPago.ABONO} required>
-            {Object.values(TipoPago).map((t) => (
-              <option key={t} value={t}>{ETIQUETA_TIPO_PAGO[t]}</option>
-            ))}
-          </Seleccion>
-        </Campo>
-
-        <Campo etiqueta="Método" error={errores.metodo} requerido>
-          <Seleccion name="metodo" defaultValue={MetodoPago.TRANSFERENCIA} required>
-            {Object.values(MetodoPago).map((m) => (
-              <option key={m} value={m}>{ETIQUETA_METODO_PAGO[m]}</option>
-            ))}
-          </Seleccion>
-        </Campo>
-      </Rejilla>
-
-      <Campo
-        etiqueta="Referencia"
-        error={errores.referencia}
-        ayuda="Número de transferencia, cheque o consignación"
-      >
-        <Entrada name="referencia" placeholder="TRF-123456" />
-      </Campo>
-
-      <Campo etiqueta="Concepto" error={errores.concepto}>
-        <AreaTexto name="concepto" rows={2} placeholder="Observaciones del pago" />
-      </Campo>
-    </FormularioDialogo>
   );
 }
 
