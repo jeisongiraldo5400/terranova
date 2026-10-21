@@ -288,7 +288,7 @@ export class VentasService {
       this.prisma.$queryRaw<VentaEstadoCuentaRow[]>`
         SELECT * FROM venta_estado_cuenta
         ${where}
-        ORDER BY fecha_venta DESC, venta_numero DESC
+        ORDER BY venta_numero DESC
         LIMIT ${filtro.porPagina} OFFSET ${(filtro.pagina - 1) * filtro.porPagina}
       `,
       this.prisma.$queryRaw<Array<{ total: bigint }>>`
