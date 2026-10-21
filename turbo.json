@@ -2,7 +2,8 @@
   "$schema": "https://turbo.build/schema.json",
   "globalEnv": [
     "NODE_ENV",
-    "DATABASE_URL"
+    "DATABASE_URL",
+    "API_URL"
   ],
   "tasks": {
     "generate": {

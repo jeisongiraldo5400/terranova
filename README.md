@@ -25,7 +25,7 @@ Cada app tiene su propio `.env` con solo las variables que usa:
 | Archivo               | Lo lee                                  | Contiene                                       |
 | --------------------- | --------------------------------------- | ---------------------------------------------- |
 | `apps/api/.env`       | API, pruebas e2e                        | `DATABASE_URL`, JWT, `CORS_ORIGIN`, puerto     |
-| `apps/web/.env.local` | Next.js                                 | `API_URL`, `NEXT_PUBLIC_SITE_URL`              |
+| `apps/web/.env.local` | Next.js                                 | `API_URL`                                      |
 | `packages/db/.env`    | Prisma, seed, importador legacy         | `DATABASE_URL`, usuario administrador inicial  |
 | `infra/.env`          | Docker Compose, respaldos               | credenciales del PostgreSQL local              |
 

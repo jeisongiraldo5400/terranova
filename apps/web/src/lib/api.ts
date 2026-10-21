@@ -1,10 +1,13 @@
 /* ==========================================================================
    Cliente de la API
    --------------------------------------------------------------------------
-   Todas las peticiones pasan por /api/* del propio Next, que las reenvia a
-   NestJS (ver app/api/[...ruta]/route.ts). Asi el navegador habla siempre
-   con su mismo origen: las cookies httpOnly de sesion viajan sin CORS y sin
-   exponer la direccion del backend.
+   Desde el navegador, las peticiones pasan por /api/* del propio Next, que
+   las reenvia a NestJS (ver app/api/[...ruta]/route.ts). Asi el navegador
+   habla siempre con su mismo origen: las cookies httpOnly de sesion viajan
+   sin CORS y sin exponer la direccion del backend.
+
+   Desde componentes de servidor se llama a NestJS directamente con
+   API_URL: pasar por el proxy seria que Next se llamara a si mismo.
    ========================================================================== */
 
 export class ErrorApi extends Error {
@@ -26,22 +29,36 @@ type Opciones = Omit<RequestInit, 'body'> & { body?: unknown; query?: Record<str
 async function peticion<T>(ruta: string, opciones: Opciones = {}): Promise<T> {
   const { body, query, headers, ...resto } = opciones;
 
+  // Primero las cookies: leerlas marca la pagina como dinamica, de modo que
+  // Next no intenta prerenderizarla en el build, donde no hay sesion.
+  const sesion = await cabecerasDeSesion();
+
   const url = new URL(`/api${ruta}`, baseUrl());
   for (const [k, v] of Object.entries(query ?? {})) {
     if (v !== undefined && v !== null && v !== '') url.searchParams.set(k, String(v));
   }
 
-  const res = await fetch(url, {
-    ...resto,
-    headers: {
-      ...(body ? { 'Content-Type': 'application/json' } : {}),
-      ...(await cabecerasDeSesion()),
-      ...headers,
-    },
-    body: body ? JSON.stringify(body) : undefined,
-    credentials: 'include',
-    cache: 'no-store',
-  });
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      ...resto,
+      headers: {
+        ...(body ? { 'Content-Type': 'application/json' } : {}),
+        ...sesion,
+        ...headers,
+      },
+      body: body ? JSON.stringify(body) : undefined,
+      credentials: 'include',
+      cache: 'no-store',
+    });
+  } catch {
+    // Mismo error que devuelve el proxy cuando la API esta caida.
+    throw new ErrorApi(
+      503,
+      'No se pudo conectar con el servidor. Verifique que la API este activa.',
+      'SIN_CONEXION',
+    );
+  }
 
   if (res.status === 204) return undefined as T;
 
@@ -68,12 +85,13 @@ async function peticion<T>(ruta: string, opciones: Opciones = {}): Promise<T> {
 }
 
 /**
- * En el navegador basta una ruta relativa. En componentes de servidor hace
- * falta una URL absoluta, porque alli no existe el concepto de origen.
+ * En el navegador, el propio origen: el proxy de /api/* reenvia a NestJS.
+ * En el servidor no existe el concepto de origen, y la API escucha bajo el
+ * mismo prefijo /api, asi que se le habla directamente.
  */
 function baseUrl(): string {
   if (typeof window !== 'undefined') return window.location.origin;
-  return process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+  return process.env.API_URL || 'http://localhost:3101';
 }
 
 /**
