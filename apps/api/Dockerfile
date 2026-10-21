@@ -58,6 +58,13 @@ ENV TZ=UTC
 # No corre como root.
 RUN addgroup -S terranova && adduser -S terranova -G terranova
 
+# Carpetas de contratos con dueno: /app la crea root y, sin esto, el primer
+# contrato falla con EACCES. /app/contratos es el CONTRATOS_DIR por defecto
+# y /datos/contratos el del volumen de compose (un volumen con nombre hereda
+# el dueno de la carpeta de la imagen al crearse).
+RUN mkdir -p /app/contratos /datos/contratos \
+ && chown terranova:terranova /app/contratos /datos/contratos
+
 COPY --from=build --chown=terranova:terranova /salida ./
 COPY --from=build --chown=terranova:terranova /app/packages/db/prisma ./prisma
 

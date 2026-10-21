@@ -144,7 +144,20 @@ export class ContratosService {
     const contrato = await this.prisma.contrato.findUnique({ where: { id: contratoId } });
     if (!contrato) throw new ErrorNoEncontrado('Contrato', contratoId);
 
-    const pdf = await readFile(join(this.directorio, contrato.storageKey));
+    let pdf: Buffer;
+    try {
+      pdf = await readFile(join(this.directorio, contrato.storageKey));
+    } catch (e) {
+      // Pasa en servidores con disco efimero (Railway sin volumen): el
+      // registro sobrevive en la base pero el archivo se perdio al redesplegar.
+      if ((e as NodeJS.ErrnoException).code === 'ENOENT') {
+        throw new ErrorReglaNegocio(
+          'El archivo de este contrato ya no esta en el servidor. ' +
+            'Regenere el contrato desde el detalle de la venta.',
+        );
+      }
+      throw e;
+    }
     const hashActual = createHash('sha256').update(pdf).digest('hex');
 
     if (hashActual !== contrato.sha256) {
