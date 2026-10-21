@@ -11,6 +11,31 @@
 4. **Respaldos.** Programe `infra/scripts/backup.sh` antes del primer día de
    uso, no después.
 
+## Base de datos gestionada
+
+El sistema no depende de Docker: apuntando `DATABASE_URL` a un PostgreSQL
+gestionado, la API y el frontend corren directamente con `pnpm dev`.
+
+```bash
+pnpm db:deploy      # aplica el esquema completo en la base remota
+pnpm db:arranque    # crea el administrador; imprime su clave una vez
+```
+
+Dos detalles con proveedores gestionados:
+
+- **`sslmode=require` no significa lo mismo en todas partes.** Prisma lo
+  interpreta como libpq —cifrar sin verificar la CA— y conecta con el
+  certificado autofirmado que suelen presentar. `node-pg`, en cambio, lo
+  trata como verificación completa y lo rechaza: los scripts que usen `pg`
+  directamente deben pasar `ssl: { rejectUnauthorized: false }`.
+- **Verifique la zona horaria del servidor.** Debe ser UTC. La cadena ya
+  fuerza `timezone=UTC` por sesión, que es lo que de verdad importa para
+  convertir timestamps a DATE.
+
+Los contratos PDF siguen escribiéndose en disco (`CONTRATOS_DIR`), no en
+la base: si el servidor de la API es efímero, móntele un volumen o
+súbalos a almacenamiento externo.
+
 ## Despliegue en contenedores
 
 ```bash

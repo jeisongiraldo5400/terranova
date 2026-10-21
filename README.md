@@ -9,16 +9,25 @@ Next.js, NestJS y PostgreSQL.
 ## Arranque rápido
 
 ```bash
-cp .env.example .env          # revise los puertos y genere los secretos JWT
+cp .env.example .env          # elija la base y genere los secretos JWT
 pnpm install
-pnpm up                       # levanta PostgreSQL (y MinIO) en Docker
+pnpm up                       # PostgreSQL local en Docker (opcional)
 pnpm db:deploy                # aplica las migraciones
-pnpm db:seed                  # datos de demostración
+pnpm db:arranque              # crea el administrador; muestra su clave una vez
 pnpm dev                      # API en :3101, web en :3100
 ```
 
-Ingreso de demostración: `admin@terranova.co` / `Cambiar.2026`
-(los tres roles usan la misma clave; cámbiela antes de usarlo de verdad).
+Con una base gestionada (Railway, Neon, RDS) basta apuntar `DATABASE_URL`
+a ella y omitir `pnpm up`: Docker deja de hacer falta por completo.
+
+Para cargar datos de demostración —dos proyectos, 18 lotes, ventas y
+pagos— use `pnpm db:seed`. **Borra todo lo que haya antes**, así que no lo
+ejecute sobre una base con información real; `pnpm db:arranque`, en
+cambio, no borra nada.
+
+`pnpm db:arranque` imprime la clave del administrador una sola vez y no la
+guarda en ningún archivo. Con `pnpm db:seed` el ingreso de demostración es
+`admin@terranova.co` / `Cambiar.2026`.
 
 Para ver la pila completa en contenedores, tal como se desplegaría:
 
@@ -67,7 +76,8 @@ importador de datos. En el v0 las validaciones estaban duplicadas entre
 | `pnpm test` | Tests de dominio |
 | `pnpm typecheck` | Verificación de tipos en todos los paquetes |
 | `pnpm db:deploy` | Aplica migraciones pendientes |
-| `pnpm db:seed` | Siembra datos de demostración |
+| `pnpm db:arranque` | Crea el administrador y la ficha de empresa; no borra nada |
+| `pnpm db:seed` | Siembra datos de demostración (**borra lo existente**) |
 | `pnpm db:studio` | Explorador visual de la base |
 | `pnpm up` / `pnpm down` | Levanta o detiene PostgreSQL |
 | `pnpm up:completo` | Levanta la pila entera en contenedores (API y web incluidas) |

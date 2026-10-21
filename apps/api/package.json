@@ -46,6 +46,8 @@
     "unplugin-swc": "^1.5.10",
     "@swc/core": "^1.14.1",
     "eslint": "^10.13.0",
-    "typescript-eslint": "^8.72.0"
+    "typescript-eslint": "^8.72.0",
+    "pg": "^8.16.3",
+    "@types/pg": "^8.15.6"
   }
 }
