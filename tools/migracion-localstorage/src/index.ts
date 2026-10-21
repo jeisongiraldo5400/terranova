@@ -17,7 +17,8 @@ import { Prisma, PrismaClient } from '@terranova/db';
 import { aTexto, calcularPlanPago, dinero, esPositivo, restar } from '@terranova/shared';
 import { type Incidencia, normalizar } from './normalizar.js';
 
-cargarEnv({ path: resolve(import.meta.dirname, '../../../.env'), quiet: true });
+// Escribe en la misma base que las migraciones: comparte packages/db/.env.
+cargarEnv({ path: resolve(import.meta.dirname, '../../../packages/db/.env'), quiet: true });
 
 const { values } = parseArgs({
   // pnpm reenvia el separador `--` como argumento literal; sin

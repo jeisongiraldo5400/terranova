@@ -22,13 +22,13 @@
     "db:ejemplos": "pnpm --filter @terranova/db run ejemplos",
     "db:studio": "pnpm --filter @terranova/db run studio",
     "db:reset": "pnpm --filter @terranova/db run reset",
-    "up": "docker compose -f infra/docker-compose.yml --env-file .env up -d",
-    "down": "docker compose -f infra/docker-compose.yml --env-file .env down",
-    "logs": "docker compose -f infra/docker-compose.yml --env-file .env logs -f",
+    "up": "docker compose -f infra/docker-compose.yml up -d",
+    "down": "docker compose -f infra/docker-compose.yml down",
+    "logs": "docker compose -f infra/docker-compose.yml logs -f",
     "migrar:legacy": "pnpm --filter @terranova/migracion-localstorage run start",
     "verificar:rutas": "bash infra/scripts/verificar-rutas.sh",
-    "up:completo": "docker compose -f infra/docker-compose.yml --env-file .env --profile completo up -d --build",
-    "ps": "docker compose -f infra/docker-compose.yml --env-file .env ps"
+    "up:completo": "docker compose -f infra/docker-compose.yml --profile completo up -d --build",
+    "ps": "docker compose -f infra/docker-compose.yml ps"
   },
   "devDependencies": {
     "turbo": "^2.5.8",

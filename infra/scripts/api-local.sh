@@ -12,7 +12,7 @@
 set -euo pipefail
 
 RAIZ="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-set -a; . "$RAIZ/.env"; set +a
+set -a; . "$RAIZ/apps/api/.env"; set +a
 PUERTO="${API_PORT:-3101}"
 LOG="${TMPDIR:-/tmp}/terranova-api.log"
 

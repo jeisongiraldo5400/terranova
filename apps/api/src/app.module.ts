@@ -25,7 +25,9 @@ import { SaludController } from './salud.controller.js';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: ['../../.env'],
+      // Relativo al directorio de trabajo (apps/api). En Railway y en Docker
+      // no hay archivo: las variables llegan del entorno del servicio.
+      envFilePath: ['.env'],
       validate: validarEnv,
     }),
     JwtModule.register({}),

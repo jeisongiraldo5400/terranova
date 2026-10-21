@@ -9,7 +9,8 @@ set -euo pipefail
 
 ARCHIVO="${1:?Uso: restaurar.sh <archivo.sql.gz>}"
 RAIZ="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-set -a; . "$RAIZ/.env"; set +a
+# Opcional: sin infra/.env se usan los mismos valores por defecto que compose.
+[ -f "$RAIZ/infra/.env" ] && { set -a; . "$RAIZ/infra/.env"; set +a; }
 
 [ -f "$ARCHIVO" ] || { echo "No existe: $ARCHIVO" >&2; exit 1; }
 gzip -t "$ARCHIVO" || { echo "El archivo esta corrupto: $ARCHIVO" >&2; exit 1; }

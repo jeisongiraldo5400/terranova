@@ -4,6 +4,9 @@
 # Desarrollo diario (solo la base; la app corre con `pnpm dev`):
 #   docker compose -f infra/docker-compose.yml up -d
 #
+# Las variables de este archivo salen de infra/.env, que compose lee solo
+# por estar en la misma carpeta. Las de la API y la web, de su propia app.
+#
 # Pila completa en contenedores:
 #   docker compose -f infra/docker-compose.yml --profile completo up -d --build
 # ===========================================================================
@@ -56,19 +59,21 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    # Secretos JWT, CORS_ORIGIN y TTL. Lo que cambia dentro del contenedor
+    # (base, puerto, carpeta de contratos) se fija abajo y tiene prioridad.
+    env_file:
+      - path: ../apps/api/.env
+        required: false
     environment:
       NODE_ENV: production
       TZ: UTC
       API_PORT: 3101
       DATABASE_URL: postgresql://${POSTGRES_USER:-terranova}:${POSTGRES_PASSWORD:-terranova_local}@postgres:5432/${POSTGRES_DB:-terranova}?schema=public&options=-c%20timezone%3DUTC
-      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3100}
-      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
-      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
       CONTRATOS_DIR: /datos/contratos
     volumes:
       - contratos:/datos/contratos
     ports:
-      - '${API_PORT:-3101}:3101'
+      - '3101:3101'
 
   web:
     build:
@@ -79,13 +84,15 @@ services:
     restart: unless-stopped
     depends_on:
       - api
+    env_file:
+      - path: ../apps/web/.env.local
+        required: false
     environment:
       NODE_ENV: production
       TZ: UTC
       # Nombre del servicio, no localhost: la peticion sale del contenedor
       # de la web hacia el de la API por la red interna de Docker.
       API_URL: http://api:3101
-      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3100}
     ports:
       - '3100:3100'
 

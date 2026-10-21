@@ -12,7 +12,8 @@
 set -euo pipefail
 
 RAIZ="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-set -a; . "$RAIZ/.env"; set +a
+# Opcional: sin infra/.env se usan los mismos valores por defecto que compose.
+[ -f "$RAIZ/infra/.env" ] && { set -a; . "$RAIZ/infra/.env"; set +a; }
 
 DESTINO="$RAIZ/infra/backups"
 RETENER_DIAS="${BACKUP_RETENER_DIAS:-30}"

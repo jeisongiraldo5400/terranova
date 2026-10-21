@@ -27,7 +27,7 @@ const POR_DEFECTO =
   'postgresql://terranova:terranova_local@localhost:5432/postgres';
 
 export async function setup(): Promise<void> {
-  cargarEnv({ path: resolve(RAIZ, '.env'), quiet: true });
+  cargarEnv({ path: resolve(RAIZ, 'apps/api/.env'), quiet: true });
 
   // TEST_DATABASE_URL, no DATABASE_URL: esta ultima puede apuntar a
   // produccion y aqui se hace DROP DATABASE.

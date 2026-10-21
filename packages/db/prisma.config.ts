@@ -7,11 +7,10 @@ import { defineConfig } from 'prisma/config';
  * deprecada y que desaparece en Prisma 7.
  *
  * Al existir este archivo, Prisma deja de cargar el .env por su cuenta, de
- * modo que hay que hacerlo de forma explicita. El .env vive en la raiz del
- * monorepo para que la API, el frontend y las migraciones compartan una
- * sola fuente de configuracion.
+ * modo que hay que hacerlo de forma explicita. Cada paquete tiene su propio
+ * .env con solo lo que usa; el de este es packages/db/.env.
  */
-cargarEnv({ path: path.resolve(import.meta.dirname, '../../.env'), quiet: true });
+cargarEnv({ path: path.resolve(import.meta.dirname, '.env'), quiet: true });
 
 export default defineConfig({
   schema: path.join('prisma', 'schema.prisma'),

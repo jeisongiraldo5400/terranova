@@ -27,7 +27,7 @@ export function validarEnv(crudo: Record<string, unknown>): Env {
     const detalle = resultado.error.issues
       .map((i) => `  - ${i.path.join('.')}: ${i.message}`)
       .join('\n');
-    throw new Error(`Configuracion invalida:\n${detalle}\n\nRevise el archivo .env`);
+    throw new Error(`Configuracion invalida:\n${detalle}\n\nRevise apps/api/.env`);
   }
 
   return resultado.data;

@@ -19,5 +19,5 @@ infra/backups
 apps/api/contratos
 legacy
 *.log
-.env
-.env.local
+**/.env
+**/.env.local

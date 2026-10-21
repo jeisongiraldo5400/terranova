@@ -12,7 +12,7 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 
-const API = process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3101';
+const API = process.env.API_URL ?? 'http://localhost:3101';
 
 // Cabeceras que no deben reenviarse: las gestiona cada salto por separado.
 const PROHIBIDAS = new Set([
