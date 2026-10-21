@@ -19,6 +19,7 @@
     "db:deploy": "pnpm --filter @terranova/db run deploy",
     "db:seed": "pnpm --filter @terranova/db run seed",
     "db:arranque": "pnpm --filter @terranova/db run arranque",
+    "db:ejemplos": "pnpm --filter @terranova/db run ejemplos",
     "db:studio": "pnpm --filter @terranova/db run studio",
     "db:reset": "pnpm --filter @terranova/db run reset",
     "up": "docker compose -f infra/docker-compose.yml --env-file .env up -d",

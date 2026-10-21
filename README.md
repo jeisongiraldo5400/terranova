@@ -20,10 +20,13 @@ pnpm dev                      # API en :3101, web en :3100
 Con una base gestionada (Railway, Neon, RDS) basta apuntar `DATABASE_URL`
 a ella y omitir `pnpm up`: Docker deja de hacer falta por completo.
 
-Para cargar datos de demostración —dos proyectos, 18 lotes, ventas y
-pagos— use `pnpm db:seed`. **Borra todo lo que haya antes**, así que no lo
-ejecute sobre una base con información real; `pnpm db:arranque`, en
-cambio, no borra nada.
+Para recorrer el sistema con cifras, `pnpm db:ejemplos` agrega cuatro
+proyectos, 50 lotes, 12 clientes y 14 ventas que cubren los cuatro estados
+de cartera. **No borra nada**, así que puede correrse sobre una base que ya
+tiene información, y repetirse sin duplicar.
+
+`pnpm db:seed` también siembra datos, pero **borra todo lo que haya antes**:
+sirve para empezar de cero en desarrollo, no para una instalación real.
 
 `pnpm db:arranque` imprime la clave del administrador una sola vez y no la
 guarda en ningún archivo. Con `pnpm db:seed` el ingreso de demostración es
@@ -77,6 +80,7 @@ importador de datos. En el v0 las validaciones estaban duplicadas entre
 | `pnpm typecheck` | Verificación de tipos en todos los paquetes |
 | `pnpm db:deploy` | Aplica migraciones pendientes |
 | `pnpm db:arranque` | Crea el administrador y la ficha de empresa; no borra nada |
+| `pnpm db:ejemplos` | Agrega un escenario de ejemplo completo; no borra nada |
 | `pnpm db:seed` | Siembra datos de demostración (**borra lo existente**) |
 | `pnpm db:studio` | Explorador visual de la base |
 | `pnpm up` / `pnpm down` | Levanta o detiene PostgreSQL |
