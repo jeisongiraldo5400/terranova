@@ -7,6 +7,8 @@ import { z } from 'zod';
 export const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   API_PORT: z.coerce.number().int().positive().default(3001),
+  // Lo inyecta Railway y sondea ese puerto; si existe, manda sobre API_PORT.
+  PORT: z.coerce.number().int().positive().optional(),
   DATABASE_URL: z.string().url(),
   CORS_ORIGIN: z.string().default('http://localhost:3000'),
 

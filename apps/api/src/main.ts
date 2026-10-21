@@ -43,7 +43,7 @@ async function arrancar(): Promise<void> {
 
   app.enableShutdownHooks();
 
-  const puerto = config.get<number>('API_PORT', 3001);
+  const puerto = config.get<number>('PORT') ?? config.get<number>('API_PORT', 3001);
   await app.listen(puerto);
 
   logger.log(`API escuchando en http://localhost:${puerto}/api`);
