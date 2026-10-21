@@ -9,13 +9,30 @@ Next.js, NestJS y PostgreSQL.
 ## Arranque rápido
 
 ```bash
-cp .env.example .env          # elija la base y genere los secretos JWT
+cp apps/api/.env.example apps/api/.env        # base y secretos JWT
+cp apps/web/.env.example apps/web/.env.local  # URL de la API
+cp packages/db/.env.example packages/db/.env  # base para migraciones y seed
+cp infra/.env.example infra/.env              # solo si usa el PostgreSQL de Docker
 pnpm install
 pnpm up                       # PostgreSQL local en Docker (opcional)
 pnpm db:deploy                # aplica las migraciones
 pnpm db:arranque              # crea el administrador; muestra su clave una vez
 pnpm dev                      # API en :3101, web en :3100
 ```
+
+Cada app tiene su propio `.env` con solo las variables que usa:
+
+| Archivo               | Lo lee                                  | Contiene                                       |
+| --------------------- | --------------------------------------- | ---------------------------------------------- |
+| `apps/api/.env`       | API, pruebas e2e                        | `DATABASE_URL`, JWT, `CORS_ORIGIN`, puerto     |
+| `apps/web/.env.local` | Next.js                                 | `API_URL`, `NEXT_PUBLIC_SITE_URL`              |
+| `packages/db/.env`    | Prisma, seed, importador legacy         | `DATABASE_URL`, usuario administrador inicial  |
+| `infra/.env`          | Docker Compose, respaldos               | credenciales del PostgreSQL local              |
+
+`DATABASE_URL` aparece en dos archivos porque la API y las migraciones son
+procesos distintos; deben apuntar a la misma base. En Railway cada servicio
+tiene sus propias variables, así que la separación es la misma: la API
+recibe las de `apps/api/.env` y la web las de `apps/web/.env.local`.
 
 Con una base gestionada (Railway, Neon, RDS) basta apuntar `DATABASE_URL`
 a ella y omitir `pnpm up`: Docker deja de hacer falta por completo.
@@ -41,7 +58,8 @@ pnpm up:completo
 Documentación de la API: <http://localhost:3101/api/docs>
 
 > Los puertos 3100/3101 se eligieron porque 3000/3001 estaban ocupados en el
-> equipo de desarrollo. Si en el suyo están libres, ajústelos en `.env`.
+> equipo de desarrollo. Si en el suyo están libres, ajústelos en `apps/api/.env`
+> (`API_PORT`, `CORS_ORIGIN`) y `apps/web/.env.local` (`API_URL`).
 
 ---
 

@@ -2,8 +2,9 @@
 
 ## Antes de usarlo de verdad
 
-1. **Secretos.** Genere los dos del `.env` con `openssl rand -hex 32`.
-   Los del `.env.example` son marcadores, no valen para producción.
+1. **Secretos.** Genere los dos JWT de `apps/api/.env` con
+   `openssl rand -hex 32`. Los de `apps/api/.env.example` son marcadores,
+   no valen para producción.
 2. **Contraseñas.** Cambie la del seed (`Cambiar.2026`) y cree los usuarios
    reales desde Configuración con sus roles.
 3. **Datos de la empresa.** Complétalos en Configuración: sin ellos no se
@@ -46,10 +47,11 @@ pnpm logs            # seguimiento
 
 Tres detalles que conviene conocer:
 
-- **El `--env-file` no es opcional.** Compose busca el `.env` junto al
-  archivo de compose (`infra/`), no en la raíz del proyecto. Los scripts de
-  `package.json` ya lo pasan; si invoca `docker compose` a mano, inclúyalo o
-  la API arrancará con los secretos JWT en blanco.
+- **Cada contenedor lee el `.env` de su app.** Compose toma las
+  credenciales del PostgreSQL de `infra/.env` (lo encuentra solo, junto al
+  archivo de compose), la API sus secretos de `apps/api/.env` y la web de
+  `apps/web/.env.local`. Sin `apps/api/.env` la API no arranca: le faltan
+  los secretos JWT.
 - **Los contratos viven en un volumen propio** (`contratos`), porque no
   están en la base de datos: sin él se perderían al recrear el contenedor.
 - **Los contenedores corren en UTC** y con un usuario sin privilegios. La
